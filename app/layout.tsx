@@ -12,14 +12,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const imageUrl = `${protocol}://${host}/og.png`;
   return {
-    title: "ContextScope — Agent Context Analyzer",
-    description: "See exactly how context enters, grows, and changes across an AI agent session.",
+    title: "Attention Lab — Why Transformer Attention Scales as N²",
+    description: "An interactive explainer for token-to-token attention and the quadratic cost of full-context transformers.",
     openGraph: {
-      title: "ContextScope",
-      description: "See how your agent thinks.",
-      images: [{ url: imageUrl, width: 1729, height: 910, alt: "ContextScope agent context analyzer" }],
+      title: "Attention Lab — N Tokens → N² Relationships",
+      description: "Explore why full transformer attention creates a quadratic number of token relationships.",
+      images: [{ url: `${protocol}://${host}/attention-lab-og.png`, width: 1729, height: 910, alt: "Attention Lab transformer attention visualization" }],
     },
-    twitter: { card: "summary_large_image", title: "ContextScope", description: "See how your agent thinks.", images: [imageUrl] },
+    twitter: { card: "summary_large_image", title: "Attention Lab", description: "Explore why transformer attention scales as N².", images: [`${protocol}://${host}/attention-lab-og.png`] },
   };
 }
 
