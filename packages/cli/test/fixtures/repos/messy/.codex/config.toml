@@ -1,0 +1,6 @@
+[mcp_servers.codex_unused]
+command = "codex-unused-mcp"
+
+[mcp_servers.disabled_one]
+command = "x"
+enabled = false

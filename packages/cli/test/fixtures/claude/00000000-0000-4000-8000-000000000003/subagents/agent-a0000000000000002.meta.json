@@ -1,0 +1,7 @@
+{
+  "agentType": "general-purpose",
+  "description": "Audit lorem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "toolUseId": "toolu_030004",
+  "spawnDepth": 1,
+  "model": "claude-sonnet-5"
+}

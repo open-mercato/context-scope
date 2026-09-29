@@ -1,0 +1,42 @@
+# Publishes packages/cli to npm as `contextscope` with provenance on a `v*` tag.
+# Needs: repository secret NPM_TOKEN (automation token, publish rights on
+# `contextscope`) or npm trusted publishing configured for this workflow; the
+# `id-token: write` permission is what `--provenance` uses to sign the
+# attestation through GitHub's OIDC. See docs/publishing.md.
+name: publish
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Tag must match packages/cli/package.json version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(node -p "require('./packages/cli/package.json').version")"
+          test "$tag" = "$version" || { echo "tag v$tag != package version $version"; exit 1; }
+      - name: Build the UI bundle (packages/cli/ui)
+        working-directory: packages/ui
+        run: npm ci && npm run build
+      - name: CLI tests
+        working-directory: packages/cli
+        run: node --test test/*.test.mjs
+      - name: Setup gate over this repository
+        run: node packages/cli/src/contextscope.mjs check --repo . --fail-on high --github
+      - name: Publish with provenance
+        working-directory: packages/cli
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

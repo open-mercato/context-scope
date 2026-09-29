@@ -1,0 +1,1411 @@
+{
+  "scope": {
+    "mode": "repo",
+    "repo": {
+      "name": "context-viewer",
+      "key": "p-ctxv"
+    },
+    "sessions": 12,
+    "machineSessions": 18,
+    "unattributed": 2
+  },
+  "range": "all",
+  "since": null,
+  "runs": [
+    {
+      "id": "claude:00000001-4c1d-4e2a-9b1f-000000001eef",
+      "vendor": "claude",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-09-02T06:53:00.000Z",
+      "endedAt": "2026-09-02T09:17:00.000Z",
+      "activeMs": 7084800,
+      "summary": {
+        "requests": 412,
+        "turns": 69,
+        "processedInputTokens": 43016096,
+        "outputTokens": 113300,
+        "cacheReadShare": 0.681,
+        "peak": {
+          "value": 168400,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.842,
+        "compactions": 3,
+        "subagents": 4,
+        "toolCalls": 288,
+        "models": [
+          "claude-sonnet-4-5"
+        ],
+        "compositionAtPeak": {
+          "system": 18524,
+          "instructions": 8420,
+          "user": 6736,
+          "assistant_text": 20208,
+          "tool_call": 10104,
+          "tool_result.file": 52204,
+          "tool_result.shell": 26944,
+          "tool_result.search": 11788,
+          "subagent_handoff": 8420,
+          "attachments": 5052
+        },
+        "compositionAtEnd": {
+          "system": 16840,
+          "instructions": 6736,
+          "user": 8420,
+          "assistant_text": 23576,
+          "tool_call": 13472,
+          "tool_result.file": 43784,
+          "tool_result.shell": 25260,
+          "tool_result.search": 8420,
+          "subagent_handoff": 10104,
+          "attachments": 5052
+        }
+      },
+      "window": {
+        "value": 200000,
+        "provenance": "estimated.local"
+      },
+      "findingsCount": 5,
+      "findingsHigh": 3,
+      "live": {
+        "at": "2026-09-02T14:04:52.800Z"
+      }
+    },
+    {
+      "id": "claude:00000002-4c1d-4e2a-9b1f-000000003dde",
+      "vendor": "claude",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-09-01T10:35:00.000Z",
+      "endedAt": "2026-09-01T11:41:00.000Z",
+      "activeMs": 3247200,
+      "summary": {
+        "requests": 188,
+        "turns": 31,
+        "processedInputTokens": 10735176,
+        "outputTokens": 34780,
+        "cacheReadShare": 0.77,
+        "peak": {
+          "value": 92100,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.461,
+        "compactions": 0,
+        "subagents": 2,
+        "toolCalls": 132,
+        "models": [
+          "claude-sonnet-4-5"
+        ],
+        "compositionAtPeak": {
+          "system": 10131,
+          "instructions": 4605,
+          "user": 3684,
+          "assistant_text": 11052,
+          "tool_call": 5526,
+          "tool_result.file": 28551,
+          "tool_result.shell": 14736,
+          "tool_result.search": 6447,
+          "subagent_handoff": 4605,
+          "attachments": 2763
+        },
+        "compositionAtEnd": {
+          "system": 9210,
+          "instructions": 3684,
+          "user": 4605,
+          "assistant_text": 12894,
+          "tool_call": 7368,
+          "tool_result.file": 23946,
+          "tool_result.shell": 13815,
+          "tool_result.search": 4605,
+          "subagent_handoff": 5526,
+          "attachments": 2763
+        }
+      },
+      "window": {
+        "value": 200000,
+        "provenance": "estimated.local"
+      },
+      "findingsCount": 2,
+      "findingsHigh": 1
+    },
+    {
+      "id": "codex:00000003-4c1d-4e2a-9b1f-000000005ccd",
+      "vendor": "codex",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-08-31T20:29:00.000Z",
+      "endedAt": "2026-08-31T23:41:00.000Z",
+      "activeMs": 9446400,
+      "summary": {
+        "requests": 264,
+        "turns": 44,
+        "processedInputTokens": 36320592,
+        "outputTokens": 105864,
+        "cacheReadShare": 0.628,
+        "peak": {
+          "value": 221900,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.816,
+        "compactions": 2,
+        "subagents": 2,
+        "toolCalls": 185,
+        "models": [
+          "gpt-5-codex"
+        ],
+        "compositionAtPeak": {
+          "system": 24409,
+          "instructions": 11095,
+          "user": 8876,
+          "assistant_text": 26628,
+          "tool_call": 13314,
+          "tool_result.file": 68789,
+          "tool_result.shell": 35504,
+          "tool_result.search": 15533,
+          "subagent_handoff": 11095,
+          "attachments": 6657
+        },
+        "compositionAtEnd": {
+          "system": 22190,
+          "instructions": 8876,
+          "user": 11095,
+          "assistant_text": 31066,
+          "tool_call": 17752,
+          "tool_result.file": 57694,
+          "tool_result.shell": 33285,
+          "tool_result.search": 11095,
+          "subagent_handoff": 13314,
+          "attachments": 6657
+        }
+      },
+      "window": {
+        "value": 272000,
+        "provenance": "observed.vendor"
+      },
+      "findingsCount": 4,
+      "findingsHigh": 2,
+      "children": [
+        {
+          "id": "codex:0000012d-4c1d-4e2a-9b1f-000000245f03",
+          "vendor": "codex",
+          "project": {
+            "key": "p-ctxv",
+            "displayName": "context-viewer",
+            "cwdHash": "3f9c1a",
+            "cwdDisplay": "~/projects/context-viewer"
+          },
+          "parentRunId": "codex:00000003-4c1d-4e2a-9b1f-000000005ccd",
+          "agentType": "worker",
+          "startedAt": "2026-08-31T21:29:00.000Z",
+          "endedAt": "2026-08-31T22:11:00.000Z",
+          "activeMs": 1800000,
+          "summary": {
+            "requests": 58,
+            "turns": 1,
+            "processedInputTokens": 2310000,
+            "outputTokens": 14200,
+            "cacheReadShare": 0.71,
+            "peak": {
+              "value": 64200,
+              "provenance": "observed.vendor"
+            },
+            "peakShareOfWindow": 0.236,
+            "compactions": 0,
+            "subagents": 0,
+            "toolCalls": 41,
+            "models": [
+              "gpt-5-codex"
+            ],
+            "compositionAtPeak": {
+              "system": 12840,
+              "user": 3210,
+              "assistant_text": 9630,
+              "tool_result.file": 25680,
+              "tool_result.shell": 12840
+            },
+            "compositionAtEnd": {
+              "system": 12840,
+              "user": 3852,
+              "assistant_text": 10272,
+              "tool_result.file": 23754,
+              "tool_result.shell": 12198
+            }
+          },
+          "window": {
+            "value": 272000,
+            "provenance": "observed.vendor"
+          },
+          "findingsCount": 1,
+          "findingsHigh": 0
+        },
+        {
+          "id": "codex:0000012e-4c1d-4e2a-9b1f-000000247df2",
+          "vendor": "codex",
+          "project": {
+            "key": "p-ctxv",
+            "displayName": "context-viewer",
+            "cwdHash": "3f9c1a",
+            "cwdDisplay": "~/projects/context-viewer"
+          },
+          "parentRunId": "codex:00000003-4c1d-4e2a-9b1f-000000005ccd",
+          "agentType": "worker",
+          "startedAt": "2026-08-31T21:53:00.000Z",
+          "endedAt": "2026-08-31T22:35:00.000Z",
+          "activeMs": 1440000,
+          "summary": {
+            "requests": 34,
+            "turns": 1,
+            "processedInputTokens": 980000,
+            "outputTokens": 8900,
+            "cacheReadShare": 0.71,
+            "peak": {
+              "value": 41800,
+              "provenance": "observed.vendor"
+            },
+            "peakShareOfWindow": 0.154,
+            "compactions": 0,
+            "subagents": 0,
+            "toolCalls": 22,
+            "models": [
+              "gpt-5-codex"
+            ],
+            "compositionAtPeak": {
+              "system": 8360,
+              "user": 2090,
+              "assistant_text": 6270,
+              "tool_result.file": 16720,
+              "tool_result.shell": 8360
+            },
+            "compositionAtEnd": {
+              "system": 8360,
+              "user": 2508,
+              "assistant_text": 6688,
+              "tool_result.file": 15466,
+              "tool_result.shell": 7942
+            }
+          },
+          "window": {
+            "value": 272000,
+            "provenance": "observed.vendor"
+          },
+          "findingsCount": 0,
+          "findingsHigh": 0
+        }
+      ]
+    },
+    {
+      "id": "claude:00000004-4c1d-4e2a-9b1f-000000007bbc",
+      "vendor": "claude",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-08-31T06:17:00.000Z",
+      "endedAt": "2026-08-31T06:53:00.000Z",
+      "activeMs": 1771200,
+      "summary": {
+        "requests": 71,
+        "turns": 12,
+        "processedInputTokens": 1950086,
+        "outputTokens": 19809,
+        "cacheReadShare": 0.556,
+        "peak": {
+          "value": 44300,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.222,
+        "compactions": 0,
+        "subagents": 0,
+        "toolCalls": 50,
+        "models": [
+          "claude-opus-4-1"
+        ],
+        "compositionAtPeak": {
+          "system": 4873,
+          "instructions": 2215,
+          "user": 1772,
+          "assistant_text": 5316,
+          "tool_call": 2658,
+          "tool_result.file": 13733,
+          "tool_result.shell": 7088,
+          "tool_result.search": 3101,
+          "subagent_handoff": 2215,
+          "attachments": 1329
+        },
+        "compositionAtEnd": {
+          "system": 4430,
+          "instructions": 1772,
+          "user": 2215,
+          "assistant_text": 6202,
+          "tool_call": 3544,
+          "tool_result.file": 11518,
+          "tool_result.shell": 6645,
+          "tool_result.search": 2215,
+          "subagent_handoff": 2658,
+          "attachments": 1329
+        }
+      },
+      "window": {
+        "value": 200000,
+        "provenance": "estimated.local"
+      },
+      "findingsCount": 1,
+      "findingsHigh": 0
+    },
+    {
+      "id": "claude:00000005-4c1d-4e2a-9b1f-000000009aab",
+      "vendor": "claude",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-08-30T02:41:00.000Z",
+      "endedAt": "2026-08-30T04:29:00.000Z",
+      "activeMs": 5313600,
+      "summary": {
+        "requests": 233,
+        "turns": 39,
+        "processedInputTokens": 19025382,
+        "outputTokens": 96462,
+        "cacheReadShare": 0.858,
+        "peak": {
+          "value": 131700,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.658,
+        "compactions": 1,
+        "subagents": 3,
+        "toolCalls": 163,
+        "models": [
+          "claude-sonnet-4-5"
+        ],
+        "compositionAtPeak": {
+          "system": 14487,
+          "instructions": 6585,
+          "user": 5268,
+          "assistant_text": 15804,
+          "tool_call": 7902,
+          "tool_result.file": 40827,
+          "tool_result.shell": 21072,
+          "tool_result.search": 9219,
+          "subagent_handoff": 6585,
+          "attachments": 3951
+        },
+        "compositionAtEnd": {
+          "system": 13170,
+          "instructions": 5268,
+          "user": 6585,
+          "assistant_text": 18438,
+          "tool_call": 10536,
+          "tool_result.file": 34242,
+          "tool_result.shell": 19755,
+          "tool_result.search": 6585,
+          "subagent_handoff": 7902,
+          "attachments": 3951
+        }
+      },
+      "window": {
+        "value": 200000,
+        "provenance": "estimated.local"
+      },
+      "findingsCount": 3,
+      "findingsHigh": 1
+    },
+    {
+      "id": "codex:00000006-4c1d-4e2a-9b1f-00000000b99a",
+      "vendor": "codex",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-08-29T13:11:00.000Z",
+      "endedAt": "2026-08-29T14:05:00.000Z",
+      "activeMs": 2656800,
+      "summary": {
+        "requests": 96,
+        "turns": 16,
+        "processedInputTokens": 4672320,
+        "outputTokens": 33216,
+        "cacheReadShare": 0.899,
+        "peak": {
+          "value": 78500,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.289,
+        "compactions": 0,
+        "subagents": 0,
+        "toolCalls": 67,
+        "models": [
+          "gpt-5-codex"
+        ],
+        "compositionAtPeak": {
+          "system": 8635,
+          "instructions": 3925,
+          "user": 3140,
+          "assistant_text": 9420,
+          "tool_call": 4710,
+          "tool_result.file": 24335,
+          "tool_result.shell": 12560,
+          "tool_result.search": 5495,
+          "subagent_handoff": 3925,
+          "attachments": 2355
+        },
+        "compositionAtEnd": {
+          "system": 7850,
+          "instructions": 3140,
+          "user": 3925,
+          "assistant_text": 10990,
+          "tool_call": 6280,
+          "tool_result.file": 20410,
+          "tool_result.shell": 11775,
+          "tool_result.search": 3925,
+          "subagent_handoff": 4710,
+          "attachments": 2355
+        }
+      },
+      "window": {
+        "value": 272000,
+        "provenance": "observed.vendor"
+      },
+      "findingsCount": 1,
+      "findingsHigh": 0
+    },
+    {
+      "id": "claude:00000007-4c1d-4e2a-9b1f-00000000d889",
+      "vendor": "claude",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-08-26T21:23:00.000Z",
+      "endedAt": "2026-08-27T02:05:00.000Z",
+      "activeMs": 13874400,
+      "summary": {
+        "requests": 611,
+        "turns": 102,
+        "processedInputTokens": 66748084,
+        "outputTokens": 171691,
+        "cacheReadShare": 0.711,
+        "peak": {
+          "value": 176200,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.881,
+        "compactions": 4,
+        "subagents": 6,
+        "toolCalls": 428,
+        "models": [
+          "claude-sonnet-4-5"
+        ],
+        "compositionAtPeak": {
+          "system": 19382,
+          "instructions": 8810,
+          "user": 7048,
+          "assistant_text": 21144,
+          "tool_call": 10572,
+          "tool_result.file": 54622,
+          "tool_result.shell": 28192,
+          "tool_result.search": 12334,
+          "subagent_handoff": 8810,
+          "attachments": 5286
+        },
+        "compositionAtEnd": {
+          "system": 17620,
+          "instructions": 7048,
+          "user": 8810,
+          "assistant_text": 24668,
+          "tool_call": 14096,
+          "tool_result.file": 45812,
+          "tool_result.shell": 26430,
+          "tool_result.search": 8810,
+          "subagent_handoff": 10572,
+          "attachments": 5286
+        }
+      },
+      "window": {
+        "value": 200000,
+        "provenance": "estimated.local"
+      },
+      "findingsCount": 6,
+      "findingsHigh": 4
+    },
+    {
+      "id": "claude:00000008-4c1d-4e2a-9b1f-00000000f778",
+      "vendor": "claude",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-08-24T07:59:00.000Z",
+      "endedAt": "2026-08-24T09:17:00.000Z",
+      "activeMs": 3837600,
+      "summary": {
+        "requests": 142,
+        "turns": 24,
+        "processedInputTokens": 7826756,
+        "outputTokens": 42032,
+        "cacheReadShare": 0.612,
+        "peak": {
+          "value": 88900,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.445,
+        "compactions": 0,
+        "subagents": 1,
+        "toolCalls": 99,
+        "models": [
+          "claude-opus-4-1"
+        ],
+        "compositionAtPeak": {
+          "system": 9779,
+          "instructions": 4445,
+          "user": 3556,
+          "assistant_text": 10668,
+          "tool_call": 5334,
+          "tool_result.file": 27559,
+          "tool_result.shell": 14224,
+          "tool_result.search": 6223,
+          "subagent_handoff": 4445,
+          "attachments": 2667
+        },
+        "compositionAtEnd": {
+          "system": 8890,
+          "instructions": 3556,
+          "user": 4445,
+          "assistant_text": 12446,
+          "tool_call": 7112,
+          "tool_result.file": 23114,
+          "tool_result.shell": 13335,
+          "tool_result.search": 4445,
+          "subagent_handoff": 5334,
+          "attachments": 2667
+        }
+      },
+      "window": {
+        "value": 200000,
+        "provenance": "estimated.local"
+      },
+      "findingsCount": 2,
+      "findingsHigh": 0
+    },
+    {
+      "id": "codex:00000009-4c1d-4e2a-9b1f-000000011667",
+      "vendor": "codex",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-08-20T16:47:00.000Z",
+      "endedAt": "2026-08-20T18:53:00.000Z",
+      "activeMs": 6199200,
+      "summary": {
+        "requests": 175,
+        "turns": 29,
+        "processedInputTokens": 16199050,
+        "outputTokens": 39550,
+        "cacheReadShare": 0.667,
+        "peak": {
+          "value": 149300,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.549,
+        "compactions": 1,
+        "subagents": 0,
+        "toolCalls": 122,
+        "models": [
+          "gpt-5-codex"
+        ],
+        "compositionAtPeak": {
+          "system": 16423,
+          "instructions": 7465,
+          "user": 5972,
+          "assistant_text": 17916,
+          "tool_call": 8958,
+          "tool_result.file": 46283,
+          "tool_result.shell": 23888,
+          "tool_result.search": 10451,
+          "subagent_handoff": 7465,
+          "attachments": 4479
+        },
+        "compositionAtEnd": {
+          "system": 14930,
+          "instructions": 5972,
+          "user": 7465,
+          "assistant_text": 20902,
+          "tool_call": 11944,
+          "tool_result.file": 38818,
+          "tool_result.shell": 22395,
+          "tool_result.search": 7465,
+          "subagent_handoff": 8958,
+          "attachments": 4479
+        }
+      },
+      "window": {
+        "value": 272000,
+        "provenance": "observed.vendor"
+      },
+      "findingsCount": 2,
+      "findingsHigh": 1
+    },
+    {
+      "id": "claude:0000000a-4c1d-4e2a-9b1f-000000013556",
+      "vendor": "claude",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-08-15T04:05:00.000Z",
+      "endedAt": "2026-08-15T04:29:00.000Z",
+      "activeMs": 1180800,
+      "summary": {
+        "requests": 38,
+        "turns": 6,
+        "processedInputTokens": 735072,
+        "outputTokens": 14668,
+        "cacheReadShare": 0.574,
+        "peak": {
+          "value": 31200,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.156,
+        "compactions": 0,
+        "subagents": 0,
+        "toolCalls": 27,
+        "models": [
+          "claude-sonnet-4-5"
+        ],
+        "compositionAtPeak": {
+          "system": 3432,
+          "instructions": 1560,
+          "user": 1248,
+          "assistant_text": 3744,
+          "tool_call": 1872,
+          "tool_result.file": 9672,
+          "tool_result.shell": 4992,
+          "tool_result.search": 2184,
+          "subagent_handoff": 1560,
+          "attachments": 936
+        },
+        "compositionAtEnd": {
+          "system": 3120,
+          "instructions": 1248,
+          "user": 1560,
+          "assistant_text": 4368,
+          "tool_call": 2496,
+          "tool_result.file": 8112,
+          "tool_result.shell": 4680,
+          "tool_result.search": 1560,
+          "subagent_handoff": 1872,
+          "attachments": 936
+        }
+      },
+      "window": {
+        "value": 200000,
+        "provenance": "estimated.local"
+      },
+      "findingsCount": 0,
+      "findingsHigh": 0
+    },
+    {
+      "id": "claude:0000000b-4c1d-4e2a-9b1f-000000015445",
+      "vendor": "claude",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-08-08T13:35:00.000Z",
+      "endedAt": "2026-08-08T16:29:00.000Z",
+      "activeMs": 8560800,
+      "summary": {
+        "requests": 356,
+        "turns": 59,
+        "processedInputTokens": 35050336,
+        "outputTokens": 80100,
+        "cacheReadShare": 0.709,
+        "peak": {
+          "value": 158800,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.794,
+        "compactions": 2,
+        "subagents": 2,
+        "toolCalls": 249,
+        "models": [
+          "claude-sonnet-4-5"
+        ],
+        "compositionAtPeak": {
+          "system": 17468,
+          "instructions": 7940,
+          "user": 6352,
+          "assistant_text": 19056,
+          "tool_call": 9528,
+          "tool_result.file": 49228,
+          "tool_result.shell": 25408,
+          "tool_result.search": 11116,
+          "subagent_handoff": 7940,
+          "attachments": 4764
+        },
+        "compositionAtEnd": {
+          "system": 15880,
+          "instructions": 6352,
+          "user": 7940,
+          "assistant_text": 22232,
+          "tool_call": 12704,
+          "tool_result.file": 41288,
+          "tool_result.shell": 23820,
+          "tool_result.search": 7940,
+          "subagent_handoff": 9528,
+          "attachments": 4764
+        }
+      },
+      "window": {
+        "value": 200000,
+        "provenance": "estimated.local"
+      },
+      "findingsCount": 3,
+      "findingsHigh": 2
+    },
+    {
+      "id": "gemini:0000000c-4c1d-4e2a-9b1f-000000017334",
+      "vendor": "gemini",
+      "project": {
+        "key": "p-ctxv",
+        "displayName": "context-viewer",
+        "cwdHash": "3f9c1a",
+        "cwdDisplay": "~/projects/context-viewer"
+      },
+      "startedAt": "2026-08-06T10:59:00.000Z",
+      "endedAt": "2026-08-06T11:41:00.000Z",
+      "activeMs": 2066400,
+      "summary": {
+        "requests": 52,
+        "turns": 9,
+        "processedInputTokens": 1937624,
+        "outputTokens": 13000,
+        "cacheReadShare": 0.801,
+        "peak": {
+          "value": 60100,
+          "provenance": "observed.vendor"
+        },
+        "peakShareOfWindow": 0.06,
+        "compactions": 0,
+        "subagents": 0,
+        "toolCalls": 36,
+        "models": [
+          "gemini-2.5-pro"
+        ],
+        "compositionAtPeak": {
+          "system": 6611,
+          "instructions": 3005,
+          "user": 2404,
+          "assistant_text": 7212,
+          "tool_call": 3606,
+          "tool_result.file": 18631,
+          "tool_result.shell": 9616,
+          "tool_result.search": 4207,
+          "subagent_handoff": 3005,
+          "attachments": 1803
+        },
+        "compositionAtEnd": {
+          "system": 6010,
+          "instructions": 2404,
+          "user": 3005,
+          "assistant_text": 8414,
+          "tool_call": 4808,
+          "tool_result.file": 15626,
+          "tool_result.shell": 9015,
+          "tool_result.search": 3005,
+          "subagent_handoff": 3606,
+          "attachments": 1803
+        }
+      },
+      "window": {
+        "value": 1000000,
+        "provenance": "estimated.local"
+      },
+      "findingsCount": 1,
+      "findingsHigh": 0
+    }
+  ],
+  "totals": {
+    "runs": 14,
+    "subagents": 20,
+    "requests": 2730,
+    "processedInputTokens": 247506574,
+    "outputTokens": 787572,
+    "cacheReadShare": 0.704,
+    "compactions": 13,
+    "vendors": [
+      "claude",
+      "codex",
+      "gemini"
+    ]
+  },
+  "trends": {
+    "days": [
+      "2026-08-04",
+      "2026-08-05",
+      "2026-08-06",
+      "2026-08-07",
+      "2026-08-08",
+      "2026-08-09",
+      "2026-08-10",
+      "2026-08-11",
+      "2026-08-12",
+      "2026-08-13",
+      "2026-08-14",
+      "2026-08-15",
+      "2026-08-16",
+      "2026-08-17",
+      "2026-08-18",
+      "2026-08-19",
+      "2026-08-20",
+      "2026-08-21",
+      "2026-08-22",
+      "2026-08-23",
+      "2026-08-24",
+      "2026-08-25",
+      "2026-08-26",
+      "2026-08-27",
+      "2026-08-28",
+      "2026-08-29",
+      "2026-08-30",
+      "2026-08-31",
+      "2026-09-01",
+      "2026-09-02"
+    ],
+    "processedInputTokens": [
+      12310637,
+      8480585,
+      6931119,
+      10011217,
+      7339771,
+      26616486,
+      8058397,
+      9081650,
+      7131673,
+      5421959,
+      7718169,
+      11245582,
+      6644381,
+      8823206,
+      12582907,
+      8959018,
+      10586212,
+      17671876,
+      11590250,
+      10172008,
+      7697493,
+      11157659,
+      9056773,
+      38557659,
+      6477615,
+      6009952,
+      10049573,
+      11092695,
+      19482397,
+      36113575
+    ],
+    "requests": [
+      122,
+      115,
+      69,
+      95,
+      157,
+      476,
+      99,
+      92,
+      87,
+      167,
+      147,
+      136,
+      166,
+      147,
+      84,
+      126,
+      79,
+      303,
+      103,
+      79,
+      81,
+      108,
+      132,
+      766,
+      153,
+      153,
+      109,
+      139,
+      346,
+      557
+    ],
+    "compactions": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      1,
+      2,
+      0,
+      3
+    ],
+    "subagents": [
+      0,
+      1,
+      0,
+      1,
+      2,
+      2,
+      2,
+      1,
+      0,
+      2,
+      1,
+      2,
+      1,
+      0,
+      2,
+      2,
+      0,
+      0,
+      0,
+      0,
+      1,
+      2,
+      0,
+      6,
+      0,
+      0,
+      3,
+      2,
+      2,
+      4
+    ],
+    "sessions": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      2
+    ],
+    "peakShareMedian": [
+      0,
+      0,
+      0.898,
+      0,
+      0,
+      0.83,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.607,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.805,
+      0,
+      0,
+      0.571,
+      0,
+      0,
+      0.792,
+      0,
+      0.837,
+      0.402,
+      0.533,
+      0.866,
+      0.447
+    ],
+    "startupH0Median": [
+      0,
+      0,
+      22021,
+      0,
+      0,
+      22057,
+      0,
+      0,
+      0,
+      0,
+      0,
+      21663,
+      0,
+      0,
+      0,
+      0,
+      0,
+      21815,
+      0,
+      0,
+      21287,
+      0,
+      0,
+      22166,
+      0,
+      21349,
+      21283,
+      20078,
+      20759,
+      20335
+    ],
+    "instructionEdits": [
+      {
+        "path": "CLAUDE.md",
+        "at": "2026-08-30T14:05:00.000Z"
+      },
+      {
+        "path": ".claude/rules/ui.md",
+        "at": "2026-08-21T14:05:00.000Z"
+      }
+    ]
+  },
+  "contextAtEnd": {
+    "sessions": 12,
+    "meanTotal": 112112,
+    "rows": [
+      {
+        "category": "tool_result.file",
+        "share": 0.2708,
+        "tokens": 30364,
+        "sessions": 12
+      },
+      {
+        "category": "tool_result.shell",
+        "share": 0.1563,
+        "tokens": 17518,
+        "sessions": 12
+      },
+      {
+        "category": "assistant_text",
+        "share": 0.1458,
+        "tokens": 16350,
+        "sessions": 12
+      },
+      {
+        "category": "system",
+        "share": 0.1042,
+        "tokens": 11678,
+        "sessions": 12
+      },
+      {
+        "category": "tool_call",
+        "share": 0.0833,
+        "tokens": 9343,
+        "sessions": 12
+      },
+      {
+        "category": "subagent_handoff",
+        "share": 0.0625,
+        "tokens": 7007,
+        "sessions": 12
+      },
+      {
+        "category": "tool_result.search",
+        "share": 0.0521,
+        "tokens": 5839,
+        "sessions": 12
+      },
+      {
+        "category": "user",
+        "share": 0.0521,
+        "tokens": 5839,
+        "sessions": 12
+      },
+      {
+        "category": "instructions",
+        "share": 0.0417,
+        "tokens": 4671,
+        "sessions": 12
+      },
+      {
+        "category": "attachments",
+        "share": 0.0313,
+        "tokens": 3504,
+        "sessions": 12
+      }
+    ]
+  },
+  "topOffenders": {
+    "largestBlocks": [
+      {
+        "runId": "claude:00000007-4c1d-4e2a-9b1f-00000000d889",
+        "scopeId": "main",
+        "blockId": "main:188",
+        "category": "tool_result.file",
+        "estTokens": 24600,
+        "firstRequest": 61,
+        "tool": "Read",
+        "label": "package-lock.json"
+      },
+      {
+        "runId": "claude:00000001-4c1d-4e2a-9b1f-000000001eef",
+        "scopeId": "main",
+        "blockId": "main:230",
+        "category": "tool_result.search",
+        "estTokens": 14900,
+        "firstRequest": 118,
+        "tool": "Grep",
+        "label": "Grep useState"
+      },
+      {
+        "runId": "claude:00000001-4c1d-4e2a-9b1f-000000001eef",
+        "scopeId": "main",
+        "blockId": "main:412",
+        "category": "subagent_handoff",
+        "estTokens": 11400,
+        "firstRequest": 201,
+        "tool": "Agent",
+        "label": "audit-deepdive handoff"
+      },
+      {
+        "runId": "codex:00000003-4c1d-4e2a-9b1f-000000005ccd",
+        "scopeId": "main",
+        "blockId": "main:97",
+        "category": "tool_result.shell",
+        "estTokens": 9850,
+        "firstRequest": 40,
+        "tool": "shell",
+        "label": "npm test"
+      },
+      {
+        "runId": "claude:00000005-4c1d-4e2a-9b1f-000000009aab",
+        "scopeId": "main",
+        "blockId": "main:301",
+        "category": "tool_result.web",
+        "estTokens": 8700,
+        "firstRequest": 144,
+        "tool": "WebFetch",
+        "label": "docs.example.dev"
+      },
+      {
+        "runId": "claude:0000000b-4c1d-4e2a-9b1f-000000015445",
+        "scopeId": "agent-c2d1",
+        "blockId": "agent-c2d1:44",
+        "category": "tool_result.file",
+        "estTokens": 8120,
+        "firstRequest": 12,
+        "tool": "Read",
+        "label": "src/generated/schema.ts"
+      }
+    ],
+    "fattestHandoffs": [
+      {
+        "runId": "claude:00000001-4c1d-4e2a-9b1f-000000001eef",
+        "scopeId": "agent-a71f",
+        "agentType": "audit-deepdive",
+        "handoffTokens": 11400,
+        "childPeak": 29800,
+        "ratio": 2.6
+      },
+      {
+        "runId": "claude:00000007-4c1d-4e2a-9b1f-00000000d889",
+        "scopeId": "agent-3b2c",
+        "agentType": "Explore",
+        "handoffTokens": 6900,
+        "childPeak": 48200,
+        "ratio": 7
+      },
+      {
+        "runId": "claude:00000005-4c1d-4e2a-9b1f-000000009aab",
+        "scopeId": "agent-77aa",
+        "agentType": "general-purpose",
+        "handoffTokens": 5200,
+        "childPeak": 22100,
+        "ratio": 4.3
+      },
+      {
+        "runId": "codex:00000003-4c1d-4e2a-9b1f-000000005ccd",
+        "scopeId": "thread-2",
+        "agentType": "worker",
+        "handoffTokens": 4400,
+        "childPeak": 41800,
+        "ratio": 9.5
+      },
+      {
+        "runId": "claude:0000000b-4c1d-4e2a-9b1f-000000015445",
+        "scopeId": "agent-c2d1",
+        "agentType": "Plan",
+        "handoffTokens": 3100,
+        "childPeak": 35600,
+        "ratio": 11.5
+      }
+    ],
+    "mostCompacted": [
+      {
+        "runId": "claude:00000007-4c1d-4e2a-9b1f-00000000d889",
+        "compactions": 4,
+        "processedInputTokens": 66748084
+      },
+      {
+        "runId": "claude:00000001-4c1d-4e2a-9b1f-000000001eef",
+        "compactions": 3,
+        "processedInputTokens": 43016096
+      },
+      {
+        "runId": "codex:00000003-4c1d-4e2a-9b1f-000000005ccd",
+        "compactions": 2,
+        "processedInputTokens": 36320592
+      },
+      {
+        "runId": "claude:0000000b-4c1d-4e2a-9b1f-000000015445",
+        "compactions": 2,
+        "processedInputTokens": 35050336
+      },
+      {
+        "runId": "claude:00000005-4c1d-4e2a-9b1f-000000009aab",
+        "compactions": 1,
+        "processedInputTokens": 19025382
+      }
+    ]
+  },
+  "firstFinding": {
+    "id": "B-02:9c7e21ab04",
+    "ruleId": "B-02",
+    "severity": "high",
+    "scope": "session",
+    "vendor": "claude",
+    "runId": "claude:00000007-4c1d-4e2a-9b1f-00000000d889",
+    "scopeId": "main",
+    "title": "Repeated fat results",
+    "count": 96,
+    "whyItMatters": "The same tools keep returning fat results in 5 of 7 sessions; this is a habit the instruction file can change, not a one-off.",
+    "evidence": [
+      {
+        "kind": "metric",
+        "ref": "sessions",
+        "label": "sessions with fat results",
+        "value": 5,
+        "unit": "count",
+        "provenance": "derived.exact"
+      },
+      {
+        "kind": "metric",
+        "ref": "count",
+        "label": "fat results in 30 days",
+        "value": 96,
+        "unit": "count",
+        "provenance": "derived.exact"
+      },
+      {
+        "kind": "block",
+        "ref": "claude:00000007-4c1d-4e2a-9b1f-00000000d889#main:188",
+        "label": "largest: Read package-lock.json",
+        "value": 24600,
+        "unit": "tokens",
+        "provenance": "estimated.local"
+      }
+    ],
+    "fix": {
+      "platform": "claude",
+      "summary": "Prefer targeted reads",
+      "path": "CLAUDE.md",
+      "snippet": "Prefer targeted reads: Read with offset/limit, Grep with head_limit, Bash | head -c 8000. Never read lockfiles or build output in full."
+    },
+    "thresholdKeys": [
+      "repeatedFatResultTokens",
+      "repeatedFatResultCount"
+    ],
+    "tokensAffected": 497000,
+    "recurrence": 5,
+    "removes": {
+      "findings": 6,
+      "sessions": 5
+    }
+  },
+  "index": {
+    "files": 14,
+    "indexed": 14,
+    "failed": 0,
+    "runsInRange": 14,
+    "state": "idle",
+    "lastPass": {
+      "parsed": 3,
+      "skipped": 11,
+      "failed": 0,
+      "ms": 1840,
+      "at": "2026-09-02T14:02:54.000Z"
+    },
+    "total": 3,
+    "done": 3,
+    "lastRunAt": "2026-09-02T14:02:54.000Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat /var/log/everything.log"
+          }
+        ]
+      }
+    ]
+  },
+  "mcpServers": {
+    "user_server": {
+      "type": "stdio",
+      "command": "user-mcp"
+    }
+  }
+}
