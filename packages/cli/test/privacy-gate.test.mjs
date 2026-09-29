@@ -112,7 +112,7 @@ test("privacy gate: real adapters through the index and the API leak neither con
     assert.ok(runFiles.length >= 6 * 3, "shell + findings + at least one scope per run");
     for (const file of runFiles) assertClean(JSON.parse(await readFile(file, "utf8")), path.relative(root, file), { home });
 
-    const app = createServer({ home, repoRoot: path.join(home, "work", "orchard"), token: TOKEN, consent: false, autoIndex: false, env: {}, warn: quiet });
+    const app = createServer({ home, repoRoot: path.join(home, "work", "orchard"), token: TOKEN, consent: false, autoIndex: false, env: {}, warn: quiet, now: () => Date.parse("2026-09-03T12:00:00.000Z") }); // fixture sessions are dated 2026-09-01
     const { port } = await app.listen(0);
     const get = async (route) => {
       const response = await fetch(`http://127.0.0.1:${port}${route}`, { headers: { authorization: `Bearer ${TOKEN}` } });

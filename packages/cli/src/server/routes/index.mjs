@@ -76,11 +76,12 @@ export function createRoutes(options) {
   const {
     index, home, repoRoot, rules, setup,
     warn = (message) => console.error(message),
+    now,
     cacheBytes = RUN_CACHE_BYTES,
     authorize = async () => {},
     isAuthorized = () => true,
   } = options;
-  const analysis = createAnalysis({ index, home, repoRoot, rules, setup, warn });
+  const analysis = createAnalysis({ index, home, repoRoot, rules, setup, warn, now });
   const prepared = createPreparedCache({ index, cacheBytes });
   const warned = new Set();
 

@@ -11,7 +11,7 @@ import { HABITS_VERSION, habitsOf } from "../src/index/entry.mjs";
 import { loadThresholds } from "../src/rules/index.mjs";
 import { createIndex } from "../src/index/writer.mjs";
 import { createAnalysis } from "../src/server/analysis.mjs";
-import { fakeAdapters, fakeRules, fakeRun, fakeSetup, makeFixtureHome } from "./helpers/index-fixture.mjs";
+import { fakeAdapters, fakeRules, fakeRun, fakeSetup, FIXTURE_NOW, makeFixtureHome } from "./helpers/index-fixture.mjs";
 
 const quiet = () => {};
 const thresholds = await loadThresholds({ home: "/nonexistent", onWarning: false });
@@ -273,7 +273,7 @@ test("manifest-only proof: /habits and the overview open no run file (fs spy + s
     for (const method of ["readRunShell", "readScope", "readRun", "readRunResponse", "readFindings"]) {
       index[method] = async (...args) => { opened.push([method, ...args]); throw new Error(`${method} must not be called while building habits`); };
     }
-    const analysis = createAnalysis({ index, home: fixture.home, repoRoot: fixture.repo, rules: fakeRules(), setup: fakeSetup(), warn: quiet });
+    const analysis = createAnalysis({ index, home: fixture.home, repoRoot: fixture.repo, rules: fakeRules(), setup: fakeSetup(), warn: quiet, now: () => FIXTURE_NOW });
     const habits = await analysis.habits({});
     assert.deepEqual(opened, []);
     assert.equal(index.stats.runFilesOpened, 0);
@@ -310,7 +310,7 @@ test("PUT thresholds re-evaluates the index: saveThresholds writes the file, sch
     let resolveEnsure;
     const pending = new Promise((resolve) => { resolveEnsure = resolve; });
     index.ensure = async (options) => { calls.push(options); const result = await original.call(index, options); resolveEnsure(result); return result; };
-    const analysis = createAnalysis({ index, home: fixture.home, repoRoot: fixture.repo, rules: fakeRules(), setup: fakeSetup(), warn: quiet });
+    const analysis = createAnalysis({ index, home: fixture.home, repoRoot: fixture.repo, rules: fakeRules(), setup: fakeSetup(), warn: quiet, now: () => FIXTURE_NOW });
     const response = await analysis.saveThresholds({ fatToolResultTokens: 9500 });
     assert.equal(response.reevaluating, true);
     assert.ok(response.thresholds && typeof response.thresholds === "object", "the response wraps the thresholds");

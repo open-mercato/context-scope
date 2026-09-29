@@ -174,3 +174,6 @@ export function forbiddenKeys(value, found = new Set(), depth = 0) {
   }
   return found;
 }
+
+/** "Now" for tests over the fixture sessions (dated 2026-09-01): time ranges and trend axes never age with the wall clock. */
+export const FIXTURE_NOW = Date.parse("2026-09-03T12:00:00.000Z");

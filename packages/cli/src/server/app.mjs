@@ -38,6 +38,8 @@ export function createServer({
   roots = {},
   env = process.env,
   warn = (message) => console.error(message),
+  /** Clock for time ranges (`since`, the 30-day default); tests pin it so fixture dates never age out. */
+  now = () => Date.now(),
   /** Write ~/.contextscope/server.json while listening (ADR-005 §6); off for embedded servers that must leave no trace. */
   serverFile = true,
   version,
@@ -45,7 +47,7 @@ export function createServer({
   repoRoot = path.resolve(repoRoot);
   const index = createIndex({ home, roots, env, adapters, rules, concurrency, warn });
   const sse = createSseHub();
-  const routes = createRoutes({ index, home, repoRoot, rules, setup, sse, warn, authorize, isAuthorized: () => authorized });
+  const routes = createRoutes({ index, home, repoRoot, rules, setup, sse, warn, now, authorize, isAuthorized: () => authorized });
   const serveStatic = createStaticHandler(uiDir);
   const resolvedRoots = resolveRoots({ home, env, roots });
   const scopeRows = [resolvedRoots.codexHome, resolvedRoots.claudeHome, repoRoot].map((root) => displayPath(root, home));

@@ -51,7 +51,7 @@ function localValidateThresholds(body, known) {
   return { valid: errors.length === 0, errors, values };
 }
 
-export function createAnalysis({ index, home, repoRoot, rules, setup, habits, warn = (message) => console.error(message) }) {
+export function createAnalysis({ index, home, repoRoot, rules, setup, habits, warn = (message) => console.error(message), now: clock }) {
   let depsPromise = null;
   let setupCache = null;
   let setupPending = null;
@@ -249,7 +249,7 @@ export function createAnalysis({ index, home, repoRoot, rules, setup, habits, wa
     const manifest = typeof index.manifest === "function" ? await index.manifest() : {};
     const result = buildOverviewFromEntries(entries, {
       repoRoot, projectKey: repoRoot ? projectKeyFor(repoRoot) : undefined,
-      scope, nested: nested ?? all, since, limit, now, setupFindings, habitFindings, instructionFiles,
+      scope, nested: nested ?? all, since, limit, now: now ?? clock?.(), setupFindings, habitFindings, instructionFiles,
       indexState: index.state ?? {},
       vendors: manifest?.vendors ?? [],
     });

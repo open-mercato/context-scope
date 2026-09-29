@@ -17,7 +17,7 @@ import { projectKeyFor } from "../src/ir/project.mjs";
 import { createIndex } from "../src/index/writer.mjs";
 import { createAnalysis } from "../src/server/analysis.mjs";
 import { renderScan, scanReport } from "../src/index/scan.mjs";
-import { CLAUDE_SESSIONS, CODEX_CHILD, CODEX_PARENT, fakeAdapters, fakeRules, fakeSetup, makeFixtureHome } from "./helpers/index-fixture.mjs";
+import { CLAUDE_SESSIONS, CODEX_CHILD, CODEX_PARENT, fakeAdapters, fakeRules, fakeSetup, FIXTURE_NOW, makeFixtureHome } from "./helpers/index-fixture.mjs";
 
 const quiet = () => {};
 const NOW = Date.parse("2026-09-02T12:00:00Z");
@@ -264,8 +264,8 @@ test("index + analysis: scan totals differ between two --repo values; --all matc
   try {
     const index = createIndex({ home: fixture.home, env: {}, adapters: fakeAdapters(), rules: fakeRules(), warn: quiet });
     await index.ensure();
-    const forRepo = createAnalysis({ index, home: fixture.home, repoRoot: fixture.repo, rules: fakeRules(), setup: fakeSetup(), warn: quiet });
-    const forOther = createAnalysis({ index, home: fixture.home, repoRoot: fixture.other, rules: fakeRules(), setup: fakeSetup(), warn: quiet });
+    const forRepo = createAnalysis({ index, home: fixture.home, repoRoot: fixture.repo, rules: fakeRules(), setup: fakeSetup(), warn: quiet, now: () => FIXTURE_NOW });
+    const forOther = createAnalysis({ index, home: fixture.home, repoRoot: fixture.other, rules: fakeRules(), setup: fakeSetup(), warn: quiet, now: () => FIXTURE_NOW });
     const repoReport = await scanReport(forRepo, {});
     const otherReport = await scanReport(forOther, {});
     const allReport = await scanReport(forRepo, { all: true });

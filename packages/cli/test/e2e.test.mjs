@@ -12,11 +12,14 @@ import { CLAUDE_SESSIONS, CODEX_CHILD, CODEX_PARENT, fakeAdapters, fakeRules, fa
 const TOKEN = "t".repeat(64);
 const quiet = () => {};
 
+const FIXTURE_NOW = Date.parse("2026-09-03T12:00:00.000Z");
+
 async function boot({ consent = false } = {}) {
   const fixture = await makeFixtureHome();
   const app = createServer({
     home: fixture.home, repoRoot: fixture.repo, token: TOKEN, adapters: fakeAdapters(), rules: fakeRules(), setup: fakeSetup(),
     consent, env: {}, warn: quiet,
+    now: () => FIXTURE_NOW, // fixture sessions are dated 2026-09-01; ranges are measured from here, not the wall clock
   });
   const { url, port } = await app.listen(0);
   const base = `http://127.0.0.1:${port}`;
