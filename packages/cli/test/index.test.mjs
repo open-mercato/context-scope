@@ -359,9 +359,12 @@ test("ensure({ only }) restricts a pass to the listed files with the same stat-b
 test("a live pass does not run discovery: unchanged files keep their metadata without a head read, listed files are stat'ed only", async () => {
   const fixture = await makeFixtureHome();
   try {
+    const first = fixture.files[CLAUDE_SESSIONS[0]];
+    // Whole-second mtime: utimes() takes ms, so a sub-ms mtime (ext4 keeps ns) would not round-trip below.
+    const pinned = new Date(Math.floor(Date.now() / 1000) * 1000 - 60_000);
+    await utimes(first, pinned, pinned);
     const index = createIndex({ home: fixture.home, env: {}, adapters: fakeAdapters(), rules: fakeRules(), warn: quiet });
     await index.ensure();
-    const first = fixture.files[CLAUDE_SESSIONS[0]];
     const entry = (await index.manifest()).files[first];
     assert.equal(entry.cwd, fixture.repo);
     // Replace the transcript with one that carries no cwd, keeping (size, mtime): a head read would now find nothing.
