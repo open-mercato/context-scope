@@ -1,0 +1,10 @@
+/* Tokens screen (#/tokens): paste or drop, counted in the browser. */
+.tokens-screen .screen-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.tokens-inputs .panel-body { display: flex; flex-direction: column; gap: 8px; }
+.tokens-textarea { width: 100%; min-height: 180px; resize: vertical; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 12.5px/1.5 var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); }
+.tokens-textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.tokens-dropzone { min-height: 180px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.tokens-skipped { margin: 0; font-size: 12.5px; }
+.tokens-name { display: inline-block; max-width: 36ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+.tokens-note { font-size: 12.5px; max-width: 90ch; }
+@media (max-width: 760px) { .tokens-inputs { grid-template-columns: 1fr; } }

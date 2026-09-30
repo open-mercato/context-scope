@@ -300,7 +300,7 @@ export interface SetupInventory {
   repo: { name: string; root: "cwd"; git: boolean };
   vendorsDetected: Vendor[];
   instructionFiles: InstructionFile[];
-  skills: Array<{ name: string; path: string; scope: "user" | "project" | "plugin"; hasDescription: boolean; descriptionChars: number; bodyEstTokens: number; frontmatterValid: boolean; invocations30d: number }>;
+  skills: Array<{ name: string; path: string; scope: "user" | "project" | "plugin"; hasDescription: boolean; descriptionChars: number; bodyEstTokens: number; frontmatterValid: boolean; invocations30d: number; vendors?: Vendor[]; aliases?: string[] }>; // path = real location; aliases = symlinks to it (e.g. .claude/skills/x -> .agents/skills/x)
   agents: Array<{ name: string; path: string; scope: "user" | "project"; model?: string; tools?: string[]; descriptionChars: number; runs30d: number }>;
   hooks: Array<{ event: string; matcher?: string; command: string; scope: "user" | "project" | "local"; runs30d: number; stdoutP50: number; stdoutP95: number }>;
   mcpServers: Array<{ name: string; scope: "user" | "project" | "local"; transport?: string; toolsObserved: string[]; invocations30d: number }>;

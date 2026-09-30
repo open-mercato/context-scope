@@ -1,4 +1,5 @@
 import type { Evidence, Finding } from "@ir/types.ts";
+import { BASIS_LABEL, ruleBasis } from "../rule-sources.ts";
 import { hrefs, navigate, route, splitRunId } from "../router.ts";
 import { copyText, thresholdEditKey, thresholds, thresholdsDrawerOpen } from "../store.ts";
 import { formatNumber, formatRatio, formatTokens, percent, plural } from "../format.ts";
@@ -171,6 +172,7 @@ export function FindingCard({ finding, headline, subline, highlight, compact, pl
         </span>
       </header>
       <p class="finding-why"><span class="finding-k">Why:</span> {finding.whyItMatters}</p>
+      <SourcesLine ruleId={finding.ruleId} />
       {hasEvidence ? (
         <div class="finding-evidence">
           <span class="finding-k">Evidence:</span>
@@ -193,5 +195,29 @@ export function FindingCard({ finding, headline, subline, highlight, compact, pl
         {finding.tokensAffected ? <span class="finding-affected" title={`Estimated tokens affected: ${formatNumber(finding.tokensAffected)}`}>~{formatTokens(finding.tokensAffected)} tok affected</span> : null}
       </footer>
     </article>
+  );
+}
+
+/** "Based on: 3 sources · sourced" with the links, the note (what is our own opinion) and any caveat, collapsed by default. */
+function SourcesLine({ ruleId }: { ruleId: string }) {
+  const basis = ruleBasis(ruleId);
+  if (!basis) return null;
+  return (
+    <details class="finding-sources">
+      <summary>
+        <span class="finding-k">Based on:</span>{" "}
+        {basis.sources.length ? `${basis.sources.length} source${basis.sources.length === 1 ? "" : "s"}` : "no external source"}
+        {" · "}<span class={`basis basis-${basis.basis}`}>{BASIS_LABEL[basis.basis]}</span>
+      </summary>
+      {basis.note ? <p class="finding-sources-note">{basis.note}</p> : null}
+      {basis.sources.length ? (
+        <ul class="finding-sources-list">
+          {basis.sources.map((source) => (
+            <li key={source.id}><a href={source.url} target="_blank" rel="noreferrer noopener">{source.title}</a>{source.publisher || source.year ? <span class="muted"> · {[source.publisher, source.year].filter(Boolean).join(", ")}</span> : null}</li>
+          ))}
+        </ul>
+      ) : null}
+      {basis.caveats.length ? <p class="finding-sources-caveat"><span class="finding-k">Caveat:</span> {basis.caveats.join(" ")}</p> : null}
+    </details>
   );
 }

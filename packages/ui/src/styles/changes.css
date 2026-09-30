@@ -27,3 +27,15 @@
 .change-card-title { margin: 0; font-size: 15px; font-weight: 600; }
 .change-card-title .muted { font-weight: 400; font-size: 13px; }
 .change-card-line { margin: 0; font-size: 13px; }
+
+/* Finding card: where the rule's rationale comes from (src/rules/sources.json). */
+.finding-sources { margin: 4px 0 8px; font-size: 12.5px; color: var(--muted); }
+.finding-sources summary { cursor: pointer; list-style-position: inside; }
+.finding-sources summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.finding-sources-note, .finding-sources-caveat { margin: 6px 0 0; }
+.finding-sources-list { margin: 6px 0 0; padding-left: 18px; }
+.finding-sources-list li { margin: 2px 0; }
+.basis { font-weight: 600; }
+.basis-sourced { color: var(--good, var(--text)); }
+.basis-inferred { color: var(--text); }
+.basis-opinion { color: var(--warn, var(--text)); }

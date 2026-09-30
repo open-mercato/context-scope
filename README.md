@@ -70,6 +70,7 @@ Without the UI:
 contextscope scan            # terminal report: cost by tool, the first change to make, habits, findings
 contextscope check           # setup gate: startup budget, file sizes, missing references, S-* rules
 contextscope status          # diagnostics in under 300 ms: vendors, index, hooks, running companion
+contextscope tokens AGENTS.md docs/   # estimated tokens of files, folders or stdin (-): Claude, Codex, neutral
 contextscope help            # every command and flag
 ```
 
@@ -82,6 +83,7 @@ Run one companion at a time. Every companion writes the same index under `~/.con
 | **Overview** | Sessions of this repo (or the whole machine) with peak occupancy, compactions and subagents. **Context at session end**: a 100 % bar of what the main context held on each session's last request, averaged over sessions (switchable to a sorted bar chart). The one change to make first, daily trends with instruction-file edit markers, the largest tool results, the fattest subagent handoffs. |
 | **Session** | **Context at session end** for this session. Click a category to split it by tool or file, e.g. *Tool args → Write / Edit / Bash*, *File reads → the files*. Below it: the occupancy chart request by request, stacked by category with compactions and the exact vendor total; cache split; subagent lanes (peak → handoff → compression ratio); heavy hitters; cost per tool; a ledger; the session's findings; a live compaction forecast. |
 | **Setup** | The instruction chain, skills, agents, hooks, MCP servers and the estimated startup budget, next to what sessions actually loaded. Each instruction file has a before/after table of sessions around each edit. |
+| **Tokens** | Paste text or drop files and get the estimated tokens (Claude- and Codex-calibrated, neutral) and the share of a 200k / 1M window. Counted in the browser; nothing is uploaded. `contextscope tokens` does the same for files and folders. |
 | **Findings** | Every finding grouped by rule, ranked by severity, tokens affected and the number of sessions it recurs in, each with a concrete fix. |
 
 ![Session: occupancy request by request, cache split and subagent lanes](public/screens/session.png)
@@ -96,6 +98,12 @@ Run one companion at a time. Every companion writes the same index under `~/.con
 
 Thresholds are documented in [`packages/cli/src/rules/thresholds.md`](packages/cli/src/rules/thresholds.md). They are
 product opinions, not facts, and every one can be overridden.
+
+Every finding card shows what its rationale is **based on**: the sources it cites, whether the rule is `sourced`,
+`inferred` or `opinion`, and any caveats the sources raise. The knowledge base is
+[`docs/sources.md`](docs/sources.md) (52 verified sources). How often the findings are actually right was measured by
+hand on five real repositories, in [`docs/evaluation-findings.md`](docs/evaluation-findings.md): facts correct in 89 %
+of checkable cases, but only 36 % of findings useful and 28 % with a good fix.
 
 ### Did my change help?
 

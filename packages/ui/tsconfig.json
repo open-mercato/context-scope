@@ -12,7 +12,7 @@
     "isolatedModules": true,
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
-    "paths": { "@ir/*": ["../cli/src/ir/*"] }
+    "paths": { "@ir/*": ["../cli/src/ir/*"], "@rules/*": ["../cli/src/rules/*"] }
   },
   "include": ["src/**/*", "../cli/src/ir/types.ts"]
 }

@@ -6,6 +6,7 @@
  * setup inventory: the same numbers the API serves, nothing read from a
  * transcript. `scanReport` builds the JSON; `renderScan` formats it.
  */
+import { sourcesFor, withSources } from "../rules/sources.mjs";
 import { formatCount, formatPercent, formatTokens, padLeft, padRight } from "../util/format.mjs";
 import { groupFindings } from "./overview.mjs";
 
@@ -58,7 +59,11 @@ export async function scanReport(analysis, { since, limit, all = false } = {}) {
 
 /** The JSON `scan --json` prints: the report minus nothing, with the optional blocks only when present. */
 export function scanJson(report) {
-  const out = { overview: report.overview, groups: report.groups, findings: report.findings, firstChange: report.firstChange, habits: report.habits, setup: report.setup };
+  const out = { overview: report.overview, groups: report.groups, findings: report.findings, firstChange: report.firstChange ? withSources(report.firstChange) : report.firstChange, habits: report.habits, setup: report.setup };
+  // Where each fired rule's rationale comes from (read-time; src/rules/sources.json).
+  const ruleIds = new Set([...(report.groups ?? []).map((group) => group.ruleId), ...(report.habits?.findings ?? []).map((finding) => finding.ruleId)].filter(Boolean));
+  const ruleSources = Object.fromEntries([...ruleIds].sort().map((id) => [id, sourcesFor(id)]).filter(([, entry]) => entry));
+  if (Object.keys(ruleSources).length) out.ruleSources = ruleSources;
   if (report.changes) out.changes = report.changes;
   if (report.cost) out.cost = report.cost;
   return out;

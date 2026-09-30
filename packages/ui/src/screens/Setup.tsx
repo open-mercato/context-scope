@@ -30,6 +30,9 @@ const LOAD_STATE: Record<InstructionFile["loadState"], { label: string; tone: Ba
   discoverable: { label: "discoverable", tone: "neutral", hint: "Present on disk but only loaded when the model touches its scope (nested / rules with paths)." },
 };
 
+/** Project skills first: they are the repository's own; user and plugin skills follow. */
+const SKILL_SCOPE_ORDER: Record<string, number> = { project: 0, user: 1, plugin: 2 };
+
 export interface SetupScreenProps { file?: string }
 
 export function SetupScreen({ file }: SetupScreenProps) {
@@ -93,8 +96,15 @@ export function SetupScreen({ file }: SetupScreenProps) {
   const openSlot = openFile ? changesByFile.get(openFile) : undefined;
 
   const skillColumns: Column<Setup["skills"][number]>[] = [
-    { key: "name", label: "Skill", sortValue: (s) => s.name, render: (s) => <span class="cell-path"><strong>{s.name}</strong><code class="cell-sub">{s.path}</code></span> },
-    { key: "scope", label: "Scope", width: "6rem", sortValue: (s) => s.scope, render: (s) => <span class="scope-tag">{s.scope}</span> },
+    { key: "name", label: "Skill", sortValue: (s) => s.name, render: (s) => (
+      <span class="cell-path">
+        <strong>{s.name}</strong>
+        <code class="cell-sub">{s.path}</code>
+        {s.aliases?.length ? <span class="cell-sub muted" title="Symlinks that point at this skill">also at {s.aliases.map((alias, i) => <><code>{alias}</code>{i < (s.aliases?.length ?? 0) - 1 ? ", " : ""}</>)}</span> : null}
+      </span>
+    ) },
+    { key: "scope", label: "Scope", width: "6rem", sortValue: (s) => `${SKILL_SCOPE_ORDER[s.scope] ?? 9}:${s.name}`, render: (s) => <span class="scope-tag">{s.scope}</span> },
+    { key: "vendors", label: "Seen by", width: "8rem", sortValue: (s) => (s.vendors ?? ["claude"]).join(","), title: "Claude Code reads .claude/skills and ~/.claude/skills (plus plugins); Codex reads .agents/skills and ~/.agents/skills", render: (s) => <span class="tool-list">{(s.vendors ?? ["claude"]).join(", ")}</span> },
     { key: "description", label: "Description", sortValue: (s) => s.descriptionChars, render: (s) => s.hasDescription ? <span>{formatNumber(s.descriptionChars)} chars{s.descriptionChars < 20 ? <span class="warn-text"> · short</span> : null}</span> : <span class="danger-text">missing</span> },
     { key: "frontmatter", label: "Frontmatter", sortValue: (s) => (s.frontmatterValid ? 1 : 0), render: (s) => s.frontmatterValid ? <Badge label="valid" tone="good" /> : <Badge label="invalid" tone="danger" /> },
     { key: "body", label: "Body est. tokens", numeric: true, align: "right", sortValue: (s) => s.bodyEstTokens, render: (s) => <span class="cell-peak">{formatNumber(s.bodyEstTokens)}<Badge provenance="estimated.local" /></span> },
@@ -143,7 +153,7 @@ export function SetupScreen({ file }: SetupScreenProps) {
         </div>
         <ul class="strip" aria-label="Setup summary">
           <li><strong>{data.instructionFiles.length}</strong> instruction files</li>
-          <li><strong>{data.skills.length}</strong> skills</li>
+          <li><strong>{data.skills.filter((s) => s.scope === "project").length}</strong> project skills <span class="muted">({data.skills.length} with user and plugin)</span></li>
           <li><strong>{data.agents.length}</strong> agents</li>
           <li><strong>{data.hooks.length}</strong> hooks</li>
           <li><strong>{data.mcpServers.length}</strong> MCP servers</li>
@@ -217,11 +227,11 @@ export function SetupScreen({ file }: SetupScreenProps) {
       </Panel>
 
       <div class="stack">
-        <Panel id="skills" title="Skills" description="Frontmatter descriptions are prompt text on every request" flush actions={<span class="muted">{data.skills.length}</span>}>
+        <Panel id="skills" title="Skills" description="Frontmatter descriptions are prompt text on every request. Project skills from .claude/skills (Claude) and .agents/skills (Codex), symlinks followed; user and plugin skills below them." flush actions={<span class="muted">{data.skills.filter((s) => s.scope === "project").length} project · {data.skills.length} total</span>}>
           {data.skills.length ? (
-            <Table label="Skills" columns={skillColumns} rows={data.skills} rowKey={(s) => s.path} defaultSort={{ key: "body", dir: "desc" }} dense />
+            <Table label="Skills" columns={skillColumns} rows={data.skills} rowKey={(s) => s.path} defaultSort={{ key: "scope", dir: "asc" }} dense />
           ) : (
-            <div class="panel-pad"><EmptyState compact title="No skills" body="Skills are SKILL.md files with a description in frontmatter." path=".claude/skills/<name>/SKILL.md · ~/.claude/skills/" command="mkdir -p .claude/skills/<name> && $EDITOR .claude/skills/<name>/SKILL.md" /></div>
+            <div class="panel-pad"><EmptyState compact title="No skills" body="Skills are SKILL.md files with a description in frontmatter." path=".claude/skills/<name>/SKILL.md · .agents/skills/<name>/SKILL.md · ~/.claude/skills/" command="mkdir -p .claude/skills/<name> && $EDITOR .claude/skills/<name>/SKILL.md" /></div>
           )}
         </Panel>
         <Panel id="agents" title="Agents" description="Definition files and observed runs" flush actions={<span class="muted">{data.agents.length}</span>}>

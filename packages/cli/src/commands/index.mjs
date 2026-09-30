@@ -11,6 +11,7 @@ import * as hooks from "./hooks.mjs";
 import * as check from "./check.mjs";
 import * as status from "./status.mjs";
 import * as experiment from "./experiment.mjs";
+import * as tokens from "./tokens.mjs";
 import * as help from "./help.mjs";
 
 export const COMMANDS = {
@@ -22,5 +23,6 @@ export const COMMANDS = {
   check,
   status,
   experiment,
+  tokens,
   help,
 };

@@ -9,6 +9,7 @@
  * violations or findings at/above --fail-on, 2 usage or configuration error,
  * 3 runtime error (unreadable file, a rule that threw).
  */
+import { withSources } from "../rules/sources.mjs";
 import path from "node:path";
 import os from "node:os";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -320,7 +321,7 @@ export async function run(args, { home, cwd, env = process.env }) {
     return;
   }
   if (args.has("--json")) {
-    console.log(JSON.stringify({ ok: result.ok, exitCode: result.exitCode, repo: result.repo, vendors: result.vendors, userConfig: result.userConfig, budget: result.budget, violations: result.violations, findings: result.findings, folded: result.folded, config: result.config, ms: Date.now() - started }, null, 2));
+    console.log(JSON.stringify({ ok: result.ok, exitCode: result.exitCode, repo: result.repo, vendors: result.vendors, userConfig: result.userConfig, budget: result.budget, violations: result.violations, findings: result.findings.map(withSources), folded: result.folded, config: result.config, ms: Date.now() - started }, null, 2));
   } else {
     console.log(renderCheck(result));
     if (args.has("--github")) {

@@ -303,3 +303,35 @@ test("repo walk skips nested repositories / worktrees and git-ignored directorie
     await rm(base, { recursive: true, force: true });
   }
 });
+
+test("skills: symlinked .claude/skills folders are followed, .agents/skills is read for Codex, one row per physical skill", async () => {
+  const base = await mkdtemp(path.join(os.tmpdir(), "contextscope-skills-"));
+  try {
+    const repo = path.join(base, "repo");
+    const home = path.join(base, "home");
+    const outside = path.join(base, "outside");
+    await mkdir(path.join(repo, ".agents", "skills", "shared"), { recursive: true });
+    await mkdir(path.join(repo, ".agents", "skills", "codex-only"), { recursive: true });
+    await mkdir(path.join(repo, ".claude", "skills", "claude-only"), { recursive: true });
+    await mkdir(path.join(outside, "escape"), { recursive: true });
+    await mkdir(home, { recursive: true });
+    const skill = (name) => `---\nname: ${name}\ndescription: Use when testing ${name} discovery.\n---\n# ${name}\n`;
+    await writeFile(path.join(repo, ".agents", "skills", "shared", "SKILL.md"), skill("shared"));
+    await writeFile(path.join(repo, ".agents", "skills", "codex-only", "SKILL.md"), skill("codex-only"));
+    await writeFile(path.join(repo, ".claude", "skills", "claude-only", "SKILL.md"), skill("claude-only"));
+    await writeFile(path.join(outside, "escape", "SKILL.md"), skill("escape"));
+    await symlink(path.join("..", "..", ".agents", "skills", "shared"), path.join(repo, ".claude", "skills", "shared"));
+    await symlink(path.join(outside, "escape"), path.join(repo, ".claude", "skills", "escape")); // leaves the repo: not followed
+    const inventory = await buildSetupInventory({ repoRoot: repo, home, capture: false, sessionStats: { sessionCount: 0, vendorsWithSessions: ["claude", "codex"] } });
+    const project = inventory.skills.filter((s) => s.scope === "project").map((s) => ({ name: s.name, path: s.path, vendors: [...s.vendors].sort(), aliases: s.aliases }));
+    project.sort((a, b) => a.name.localeCompare(b.name));
+    assert.deepEqual(project, [
+      { name: "claude-only", path: ".claude/skills/claude-only/SKILL.md", vendors: ["claude"], aliases: [] },
+      { name: "codex-only", path: ".agents/skills/codex-only/SKILL.md", vendors: ["codex"], aliases: [] },
+      { name: "shared", path: ".agents/skills/shared/SKILL.md", vendors: ["claude", "codex"], aliases: [".claude/skills/shared/SKILL.md"] },
+    ]);
+    assert.ok(inventory.startupBudget.claude.skills.value > 0 && inventory.startupBudget.codex.skills.value > 0, "each vendor's budget counts the skills it sees");
+  } finally {
+    await rm(base, { recursive: true, force: true });
+  }
+});

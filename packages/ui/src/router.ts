@@ -6,6 +6,7 @@ export type Route =
   | { name: "setup"; file?: string }
   | { name: "findings"; scope?: string; vendor?: string }
   | { name: "open" }
+  | { name: "tokens" }
   | { name: "notfound"; path: string };
 
 function safeDecode(value: string): string {
@@ -26,6 +27,7 @@ export function parseHash(hash: string): Route {
   if (segments[0] === "setup") return { name: "setup", file: query.get("file") ?? undefined };
   if (segments[0] === "findings") return { name: "findings", scope: query.get("scope") ?? undefined, vendor: query.get("vendor") ?? undefined };
   if (segments[0] === "open") return { name: "open" };
+  if (segments[0] === "tokens") return { name: "tokens" };
   return { name: "notfound", path: pathPart };
 }
 
@@ -37,6 +39,7 @@ export function routeKey(route: Route): string {
     case "findings": return "findings";
     case "overview": return "overview";
     case "open": return "open";
+    case "tokens": return "tokens";
     default: return `notfound/${route.path}`;
   }
 }
@@ -69,6 +72,8 @@ export const hrefs = {
   },
   /** Drop zone / file picker for a `contextscope.export/1` document. */
   open: () => "#/open",
+  /** Paste text or add files and count tokens locally. */
+  tokens: () => "#/tokens",
   findings: (options: { scope?: string; vendor?: string; run?: string } = {}) => {
     const query = new URLSearchParams();
     if (options.scope) query.set("scope", options.scope);

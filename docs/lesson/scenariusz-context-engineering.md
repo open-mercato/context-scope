@@ -74,6 +74,8 @@ Kasa, czyli do wykonania zadania potrzeba jak najmniej tokenów. A tokeny to nie
 
 Jest już pierwsza twarda obserwacja z badań: w analizie 124 pull requestów z 10 repozytoriów samo posiadanie `AGENTS.md` wiązało się z o ok. 29% krótszym medianowym czasem pracy agenta i o ok. 17% mniejszą liczbą tokenów wyjściowych, przy podobnej skuteczności. To wczesne dane, a nie prawo natury, ale pokazują, że plik instrukcji to realna dźwignia, a nie kosmetyka.
 
+I od razu kontrapunkt, bo uczciwość tego wymaga. Zespół z ETH Zurich (Gloaguen i in., 2026) sprawdził pliki kontekstu na kilku agentach i modelach i nie znalazł ogólnej poprawy skuteczności zadań, za to koszt inferencji rósł średnio o ponad 20%. Szczególnie mało dawały ogólne opisy repozytorium. Jak to pogodzić? Plik instrukcji sam w sobie nie jest ani dobry, ani zły. Pomaga, kiedy mówi agentowi coś, czego ten nie wyczyta z kodu: komendy, pułapki, gdzie szukać. Szkodzi, kiedy jest długim opisem tego, co agent i tak widzi. I to jest dokładnie teza tej lekcji: minimalny zestaw, a nie więcej tekstu.
+
 ### Scena 6. Context rot, czyli limit uwagi
 
 **Na ekranie:** Attention Lab — suwak liczby tokenów, siatka połączeń uwagi między tokenami.
@@ -536,15 +538,52 @@ Dzięki, że dotrwałeś do końca tygodnia. Do zobaczenia w kolejnym module.
 
 ## Materiały i źródła
 
-- Anthropic, *Effective context engineering for AI agents* — context rot, budżet uwagi, „właściwa wysokość” system promptu, przykłady jako „obrazki”, just-in-time context, strategia hybrydowa, kompakcja, notatki strukturalne, subagenci: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
-- Jeff Mixon, *dotagents-standard skill* — standard `.agents/` (rules / context / memory / personas / skills / specs / logs), router z czasownikami akcji, progressive disclosure w samym skillu: https://www.jeffmixon.com/post/dotagents-standard-agent-skill/
-- 10xDevs, lekcja w module 3: https://bravecourses.circle.so/c/lekcje-10x3/sections/966240/lessons/3662412 — *uwaga: strona wymaga logowania i nie została przeczytana przy tworzeniu scenariusza; przed nagraniem sprawdź spójność nazewnictwa i odwołań z poprzednimi lekcjami.*
-- Liu i in., *Lost in the Middle*: https://arxiv.org/abs/2307.03172
-- Chroma, *Context Rot*: https://www.trychroma.com/research/context-rot
-- *Impact of AGENTS.md on coding-agent efficiency* (124 PR, 10 repo): https://arxiv.org/abs/2601.20404
-- *What Keeps Agent Skills from Being Reusable?* (138 133 skille): https://arxiv.org/abs/2608.08453
-- Claude Code: subagenci https://code.claude.com/docs/en/subagents, hooki https://code.claude.com/docs/en/hooks, okno kontekstowe https://code.claude.com/docs/en/context-window
-- ContextScope (to repo): `packages/cli/README.md` — `scan`, `check`, `experiment`, `hooks`; reguły S-* (setup), B-* (sesje), H-* (nawyki między sesjami) w `packages/cli/src/rules/`; research w `docs/context-engineering-research.md`.
+Pełna, zweryfikowana baza wiedzy (52 źródła, każdy link sprawdzony, z przypisaniem do reguł ContextScope i zaznaczeniem, co jest udokumentowane, a co jest opinią) jest w [`docs/sources.md`](../sources.md). Poniżej wybór do lekcji.
+
+**Artykuły Anthropic (engineering)**
+- Effective context engineering for AI agents: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+- Building effective agents: https://www.anthropic.com/research/building-effective-agents
+- Writing effective tools for agents: https://www.anthropic.com/engineering/writing-tools-for-agents
+- How we built our multi-agent research system: https://www.anthropic.com/engineering/multi-agent-research-system
+- Effective harnesses for long-running agents: https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents
+- Equipping agents for the real world with Agent Skills: https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills
+- Code execution with MCP: https://www.anthropic.com/engineering/code-execution-with-mcp
+- Advanced tool use: https://www.anthropic.com/engineering/advanced-tool-use
+
+**Dokumentacja narzędzi**
+- Claude Code: pamięć i `CLAUDE.md` https://code.claude.com/docs/en/memory · best practices https://code.claude.com/docs/en/best-practices · okno kontekstowe https://code.claude.com/docs/en/context-window · koszty https://code.claude.com/docs/en/costs · subagenci https://code.claude.com/docs/en/sub-agents · hooki https://code.claude.com/docs/en/hooks · skille https://code.claude.com/docs/en/skills · MCP (tool search, odkładanie schematów) https://code.claude.com/docs/en/mcp · prompt caching https://code.claude.com/docs/en/prompt-caching
+- Claude API: context windows https://platform.claude.com/docs/en/build-with-claude/context-windows · context editing https://platform.claude.com/docs/en/build-with-claude/context-editing · compaction https://platform.claude.com/docs/en/build-with-claude/compaction · token counting https://platform.claude.com/docs/en/build-with-claude/token-counting
+- Codex: `AGENTS.md` https://learn.chatgpt.com/docs/agent-configuration/agents-md · konfiguracja (m.in. limit `project_doc_max_bytes` 32 KiB) https://learn.chatgpt.com/docs/config-file/config-reference
+- Standardy: AGENTS.md https://agents.md/ · Agent Skills https://agentskills.io/specification · MCP tools https://modelcontextprotocol.io/specification/2025-06-18/server/tools
+
+**Badania**
+- Liu i in., Lost in the Middle: https://arxiv.org/abs/2307.03172
+- Hsieh i in., RULER: https://arxiv.org/abs/2404.06654
+- Modarressi i in., NoLiMa: https://arxiv.org/abs/2502.05167
+- Chroma, Context Rot: https://www.trychroma.com/research/context-rot
+- Du i in., Context length alone hurts LLM performance: https://arxiv.org/abs/2510.05381
+- Laban i in., LLMs get lost in multi-turn conversation: https://arxiv.org/abs/2505.06120
+- Yang i in., SWE-agent (interfejs agent–komputer, zwięzłe wyniki narzędzi): https://arxiv.org/abs/2405.15793
+- Lindenbauer i in., The Complexity Trap (maskowanie wyników narzędzi vs streszczanie): https://arxiv.org/abs/2508.21433
+- Zhang i in., ACE i „context collapse”: https://arxiv.org/abs/2510.04618
+- Lumer i in., prompt caching w agentach: https://arxiv.org/abs/2601.06007
+- Lulla i in., wpływ `AGENTS.md` na efektywność: https://arxiv.org/abs/2601.20404
+- Gloaguen i in. (ETH), Evaluating AGENTS.md (kontrapunkt): https://arxiv.org/abs/2602.11988
+- Wady w publicznych skillach: https://arxiv.org/abs/2608.08453
+
+**Praktycy**
+- Manus, Context Engineering for AI Agents: https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus
+- LangChain, Context engineering for agents: https://www.langchain.com/blog/context-engineering-for-agents
+- Drew Breunig, How contexts fail: https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html
+- Cognition, Don't build multi-agents: https://cognition.com/blog/dont-build-multi-agents
+- Simon Willison o context engineering (z cytatem Karpathy'ego): https://simonwillison.net/2025/Jun/27/context-engineering/
+- Jeff Mixon, dotagents: https://www.jeffmixon.com/post/dotagents-standard-agent-skill/
+
+**10xDevs**
+- Lekcja w module 3: https://bravecourses.circle.so/c/lekcje-10x3/sections/966240/lessons/3662412. Strona wymaga logowania i nie została przeczytana przy tworzeniu scenariusza. Przed nagraniem sprawdź spójność z poprzednimi lekcjami.
+
+**ContextScope**
+- Ocena trafności rekomendacji na 5 repozytoriach (fakty trafne w 89 %, przydatne 36 %, dobre poprawki 28 %): [`docs/evaluation-findings.md`](../evaluation-findings.md). Dobry materiał do sceny o feedback loopie: narzędzie mierzy dobrze, ale radzi słabiej, więc każdą rekomendację sprawdzasz pomiarem przed i po.
 
 ## Notatki produkcyjne
 

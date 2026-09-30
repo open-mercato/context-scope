@@ -19,11 +19,12 @@ import type { SessionScreenProps } from "./screens/Session.tsx";
 
 // Heavy screens load on demand (code-split chunks); the loader is cached after the first import.
 const loadSetup = () => import("./screens/Setup.tsx").then((m) => m.SetupScreen);
+const loadTokens = () => import("./screens/Tokens.tsx").then((m) => m.TokensScreen);
 const loadSession = () => import("./screens/Session.tsx").then((m) => m.SessionScreen);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyScreen = ComponentType<any>;
-function Lazy({ load, props, label }: { load: () => Promise<AnyScreen>; props: SetupScreenProps | SessionScreenProps; label: string }) {
+function Lazy({ load, props, label }: { load: () => Promise<AnyScreen>; props: SetupScreenProps | SessionScreenProps | Record<string, never>; label: string }) {
   const [Screen, setScreen] = useState<AnyScreen | null>(null);
   const [failed, setFailed] = useState<Error | null>(null);
   useEffect(() => {
@@ -159,6 +160,7 @@ function TopBar() {
           <a href={hrefs.overview()} class={active("overview")} aria-current={current.name === "overview" ? "page" : undefined}>Overview</a>
           <a href={hrefs.setup()} class={active("setup")} aria-current={current.name === "setup" ? "page" : undefined}>Setup</a>
           <a href={hrefs.findings()} class={active("findings")} aria-current={current.name === "findings" ? "page" : undefined}>Findings</a>
+          <a href={hrefs.tokens()} class={active("tokens")} aria-current={current.name === "tokens" ? "page" : undefined}>Tokens</a>
           {current.name === "session" || lastSession.value ? (
             <a href={lastSession.value ? hrefs.session(lastSession.value.vendor, lastSession.value.id) : "#/"} class={active("session")} aria-current={current.name === "session" ? "page" : undefined}>Session</a>
           ) : null}
@@ -233,6 +235,7 @@ function Screen() {
     case "setup": return <Lazy load={loadSetup} props={{ file: current.file }} label="Loading setup" />;
     case "findings": return <FindingsScreen scope={current.scope} vendor={current.vendor} />;
     case "open": return <OpenScreen />;
+    case "tokens": return <Lazy load={loadTokens} props={{}} label="Loading token counter" />;
     case "session": return <Lazy load={loadSession} props={{ vendor: current.vendor, id: current.id, scope: current.scope, request: current.request }} label={`Loading session ${current.id.slice(0, 8)}`} />;
     default:
       return (
@@ -256,7 +259,7 @@ function useGlobalDrop() {
       const file = event.dataTransfer?.files?.[0];
       if (!file) return;
       event.preventDefault();
-      if (route.value.name === "open") return; // the Open screen handles its own drops
+      if (route.value.name === "open" || route.value.name === "tokens") return; // these screens handle their own drops
       pendingFile.value = file;
       navigate(hrefs.open());
     };

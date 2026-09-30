@@ -47,7 +47,8 @@ export function buildStartupBudget({ vendorsDetected, instructionFiles, skills, 
     if (vendor === "codex" && Number.isFinite(sessionStats?.codexInstructionChars) && sessionStats.codexInstructionChars > 0) {
       instructions = measured(estimateTokensFromBytes(sessionStats.codexInstructionChars, "prose"), "observed.artifact");
     }
-    const skillTokens = vendor === "claude" ? skills.reduce((sum, s) => sum + estimateTokensFromBytes(s.descriptionChars, "prose"), 0) : 0;
+    // Each vendor lists the skills it can see (Claude: .claude/skills, ~/.claude/skills, plugins; Codex: .agents/skills, ~/.agents/skills).
+    const skillTokens = skills.filter((s) => (s.vendors ?? ["claude"]).includes(vendor)).reduce((sum, s) => sum + estimateTokensFromBytes(s.descriptionChars, "prose"), 0);
     const agentTokens = vendor === "claude" ? agents.reduce((sum, a) => sum + estimateTokensFromBytes(a.descriptionChars, "prose"), 0) : 0;
     const servers = mcpServers.filter(server => (server.vendor ?? "claude") === vendor);
     const mcpTokens = servers.reduce((sum, server) => sum + mcpToolCount(server) * MCP_TOKENS_PER_TOOL, 0);

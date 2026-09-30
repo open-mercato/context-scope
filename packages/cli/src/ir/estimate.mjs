@@ -15,47 +15,30 @@
  * a constant changes; test/ir-calibration.test.mjs pins the file hash.
  */
 import fs from "node:fs";
+import { createEstimator, detectKind } from "./estimate-core.mjs";
 
 export const CALIBRATION = JSON.parse(fs.readFileSync(new URL("./calibration.json", import.meta.url), "utf8"));
 export const ESTIMATOR_VERSION = CALIBRATION.estimatorVersion;
 export const CALIBRATION_VERSION = CALIBRATION.calibrationVersion;
 
-const NEUTRAL = CALIBRATION.neutral.bytesPerToken;
 const VENDORS = CALIBRATION.vendors;
-const ENVELOPE_SETS = new Map(Object.entries(VENDORS).map(([vendor, cal]) => [vendor, new Set(cal.envelopeCategories ?? [])]));
+const core = createEstimator(CALIBRATION);
 
 export function byteLength(text) {
   return typeof text === "string" ? Buffer.byteLength(text, "utf8") : 0;
 }
 
 /** Vendor calibration record, or null for unknown vendors. */
-export function calibrationFor(vendor) {
-  return (vendor && VENDORS[vendor]) || null;
-}
+export const calibrationFor = core.calibrationFor;
 
 export function estimateTokens(text, kind = "prose", options = undefined) {
   return estimateTokensFromBytes(byteLength(text), kind, options);
 }
 
-export function estimateTokensFromBytes(bytes, kind = "prose", { vendor, category } = {}) {
-  if (!bytes) return 0;
-  const cal = calibrationFor(vendor);
-  const ratios = cal?.bytesPerToken ?? NEUTRAL;
-  const base = Math.ceil(bytes / (kind === "code" ? ratios.code : ratios.prose));
-  if (!cal) return base;
-  let tokens = base;
-  if (cal.categoryScale) tokens = Math.max(1, Math.round(base * categoryScaleFor(cal, category)));
-  if (cal.envelopeTokens && category && ENVELOPE_SETS.get(vendor).has(category)) tokens += cal.envelopeTokens;
-  return tokens;
-}
+export const estimateTokensFromBytes = core.estimateTokensFromBytes;
 
-function categoryScaleFor(cal, category) {
-  const scale = cal.categoryScale;
-  if (!category) return scale.other ?? 1;
-  if (category.startsWith("tool_result.") || category === "subagent_handoff") return scale.toolResult ?? 1;
-  if (category === "tool_call") return scale.toolCall ?? 1;
-  return scale.other ?? 1;
-}
+/** Token estimate of standalone text per vendor and neutral (`contextscope tokens`, the Tokens screen). */
+export const tokenReport = core.tokenReport;
 
 /** Tokens charged for one image part (vendors do not report per-image tokens). */
 export function imageTokensFor(vendor) {
@@ -75,15 +58,7 @@ export function systemBaselineFor(vendor, { hasBaseInstructionsBlock = false } =
   return cal.systemBaselineTokens ?? 0;
 }
 
-/** Heuristic content-kind detection for a block: JSON, code fences, or path-heavy content count as code. */
-export function detectKind(text) {
-  if (typeof text !== "string" || text.length < 40) return "prose";
-  const sample = text.slice(0, 4000);
-  const first = sample.trimStart()[0];
-  if (first === "{" || first === "[") return "code";
-  const symbols = (sample.match(/[{}();=<>\[\]\/\\|]/g) || []).length;
-  return symbols / sample.length > 0.03 ? "code" : "prose";
-}
+export { detectKind };
 
 export function sizeOfJson(value) {
   try { return byteLength(JSON.stringify(value)); } catch { return 0; }

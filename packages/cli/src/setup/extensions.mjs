@@ -4,7 +4,8 @@
 import path from "node:path";
 import { estimateTokens } from "../ir/estimate.mjs";
 import { parseFrontmatter, asStringList } from "./frontmatter.mjs";
-import { displayPath, isDirectory, listEntries, readTextSafe, statSafe, walk } from "./fs.mjs";
+import { realpath } from "node:fs/promises";
+import { displayPath, isDirectory, isInside, listEntries, readTextSafe, statSafe, walk } from "./fs.mjs";
 
 const MAX_PLUGIN_SKILLS = 200;
 
@@ -48,32 +49,69 @@ async function readSkill(abs, scope, { repoRoot, home, sessionStats }) {
   return skill;
 }
 
-async function skillDirs(root) {
+/**
+ * `<root>/<name>/SKILL.md` for every skill folder, including symlinked folders
+ * (`.claude/skills/x -> ../../.agents/skills/x` is the common shared layout).
+ * A link is followed only when its target stays inside the repository or home.
+ */
+async function skillDirs(root, roots) {
   const out = [];
   for (const entry of await listEntries(root)) {
-    if (!entry.isDirectory()) continue;
-    const abs = path.join(root, entry.name, "SKILL.md");
+    if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+    const dir = path.join(root, entry.name);
+    if (entry.isSymbolicLink()) {
+      const target = await realpath(dir).catch(() => null);
+      if (!target || !roots.some((base) => base && isInside(base, target)) || !(await isDirectory(target))) continue;
+    }
+    const abs = path.join(dir, "SKILL.md");
     if (await statSafe(abs)) out.push(abs);
   }
   return out.sort();
 }
 
+// Where each vendor looks for skills. Claude Code: .claude/skills (project) and ~/.claude/skills;
+// Codex: .agents/skills (project) and ~/.agents/skills (https://learn.chatgpt.com/docs/build-skills).
+const SKILL_LOCATIONS = [
+  { base: "repo", dir: [".claude", "skills"], scope: "project", vendor: "claude" },
+  { base: "repo", dir: [".agents", "skills"], scope: "project", vendor: "codex" },
+  { base: "home", dir: [".claude", "skills"], scope: "user", vendor: "claude" },
+  { base: "home", dir: [".agents", "skills"], scope: "user", vendor: "codex" },
+];
+
 export async function collectSkills(ctx) {
   const { repoRoot, home } = ctx;
+  const roots = [repoRoot, home].filter(Boolean);
   const skills = [];
-  for (const abs of await skillDirs(path.join(repoRoot, ".claude", "skills"))) {
-    const skill = await readSkill(abs, "project", ctx);
-    if (skill) skills.push(skill);
-  }
-  for (const abs of await skillDirs(path.join(home, ".claude", "skills"))) {
-    const skill = await readSkill(abs, "user", ctx);
-    if (skill) skills.push(skill);
+  // One row per physical skill: a symlink in .claude/skills and its target in .agents/skills are the
+  // same skill, visible to both vendors, listed under its real location with the link as an alias.
+  const byReal = new Map();
+  for (const location of SKILL_LOCATIONS) {
+    const base = location.base === "repo" ? repoRoot : home;
+    if (!base) continue;
+    for (const abs of await skillDirs(path.join(base, ...location.dir), roots)) {
+      const real = (await realpath(abs).catch(() => abs));
+      const existing = byReal.get(real);
+      if (existing) {
+        if (!existing.vendors.includes(location.vendor)) existing.vendors.push(location.vendor);
+        const alias = displayPath(abs, { repoRoot, home });
+        if (alias !== existing.path && !existing.aliases.includes(alias)) existing.aliases.push(alias);
+        continue;
+      }
+      const skill = await readSkill(real, location.scope, ctx);
+      if (!skill) continue;
+      skill.vendors = [location.vendor];
+      skill.aliases = [];
+      const shown = displayPath(abs, { repoRoot, home });
+      if (shown !== skill.path) skill.aliases.push(shown);
+      byReal.set(real, skill);
+      skills.push(skill);
+    }
   }
   const pluginRoot = path.join(home, ".claude", "plugins", "cache");
   const pluginSkills = await walk(pluginRoot, { maxDepth: 8, maxFiles: MAX_PLUGIN_SKILLS, accept: (_, name) => name === "SKILL.md" });
   for (const abs of pluginSkills.sort()) {
     const skill = await readSkill(abs, "plugin", ctx);
-    if (skill) skills.push(skill);
+    if (skill) skills.push({ ...skill, vendors: ["claude"], aliases: [] });
   }
   return skills;
 }

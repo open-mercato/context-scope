@@ -47,6 +47,7 @@ contextscope index --clear   # delete ~/.contextscope/index
 contextscope export --run claude:<id> --out session.json   # shareable export of one session (sizes, hashes, counts)
 contextscope hooks install   # capture Claude Code runtime events (diff preview, backup outside the repo, reversible)
 contextscope check           # CI gate over the setup: budgets, file sizes, broken refs, S-* rules
+contextscope tokens <file|dir|->   # estimated tokens (claude / codex / neutral) of files, folders or stdin; --kind, --top, --json
 contextscope experiment start <name>   # snapshot the instruction chain; then edit, `candidate <name>`, run sessions, `compare <name>`
 contextscope help            # every command with its options
 ```
