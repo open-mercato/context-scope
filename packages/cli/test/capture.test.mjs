@@ -43,6 +43,8 @@ function runScript(ctx, input, extra = {}) {
     const child = execFileCb(process.execPath, [ctx.script], { env: { ...process.env, HOME: ctx.home }, ...extra }, (error, stdout, stderr) => {
       resolve({ code: error?.code ?? 0, stdout, stderr });
     });
+    // The script stops reading past its stdin cap and exits, so a large write can hit EPIPE: that is the behaviour under test.
+    child.stdin.on("error", (error) => { if (error.code !== "EPIPE") throw error; });
     if (input !== undefined) child.stdin.end(input);
   });
 }
