@@ -1,0 +1,70 @@
+{
+  "$comment": "Every estimator constant lives here (ADR-002 F). Adapters carry no numbers. `measured` is the output of scripts/calibrate.mjs run against the local index (250 files, chars-v1 runs; slopes and k are constant-independent); `calibrationVersion` must change whenever a constant changes (test/ir-calibration.test.mjs pins the sha1 of the constants, i.e. everything but `$comment` and `measured`, next to it).",
+  "estimatorVersion": "chars-v2",
+  "calibrationVersion": "cal-2026-09-02d",
+  "neutral": { "bytesPerToken": { "code": 3.2, "prose": 3.6 } },
+  "vendors": {
+    "claude": {
+      "bytesPerToken": { "code": 2.12, "prose": 2.26 },
+      "envelopeTokens": 80,
+      "envelopeCategories": ["tool_call", "tool_result.file", "tool_result.shell", "tool_result.search", "tool_result.web", "tool_result.other", "attachments", "subagent_handoff", "skills", "user"],
+      "imageTokens": 1500,
+      "systemBaselineTokens": 25000,
+      "measured": {
+        "at": "2026-09-02",
+        "method": "deltaCheck slope: (input + cacheCreation) vs bytes of new visible blocks, per dominant category, segment starts excluded; constants = previous (2.25 / 2.4) divided by p50 of main-scope scaleRaw (1.062) so the main scope centres on k = 1",
+        "sessions": 170,
+        "requests": 58567,
+        "observations": 19175,
+        "envelopeTokensPerRequest": 205,
+        "bytesPerTokenByCategory": { "tool_result.shell": 2.36, "tool_call": 2.59, "tool_result.file": 2.30, "subagent_handoff": 2.38, "attachments": 2.41, "skills": 2.77, "tool_result.other": 2.32, "tool_result.web": 2.78, "tool_result.search": 2.56 },
+        "scaleRawBefore": { "allScopes": { "p10": 0.979, "p50": 1.119, "p90": 1.47 }, "mainScopes": { "p10": 0.943, "p50": 1.062, "p90": 1.272 } },
+        "resultingError": { "median": 0.107, "p95": 0.395 },
+        "envelopeFit": {
+          "at": "2026-09-02",
+          "method": "trimmed least squares over main-scope requests (ADR-003 section 9): charged = bytes_code / bpt + bytes_prose / bpt + b x envelope-category blocks + c, 3 x MAD trimming; candidates replayed on the ADR-003 reference sessions by recomputing block estimates and re-running reconcileScope (scripts/calibrate.mjs)",
+          "requests": 19605, "used": 15453,
+          "envelopeTokensPerBlock": 100.5, "perRequestTokens": -23, "bytesPerToken": { "code": 2.4, "prose": 2.59 }, "deltaVsCurrent": 0.26,
+          "referenceColumns": ["kP50", "errorMedian", "errorP95"],
+          "reference": {
+            "envelope80": { "cc87cfe5": [1.107, 0.108, 0.168], "9f2e3d73": [1.016, 0.016, 0.065], "5ca0d315": [1.002, 0.03, 0.111], "meanAbsKError": 0.042 },
+            "envelope101": { "cc87cfe5": [1.06, 0.063, 0.127], "9f2e3d73": [0.972, 0.029, 0.053], "5ca0d315": [0.977, 0.03, 0.133], "meanAbsKError": 0.037 }
+          },
+          "decision": "fitted per-block envelope is within 30% of 80 (26%); 101 centres cc87cfe5 but pushes the other two below 1.00, so the constant is kept"
+        }
+      }
+    },
+    "codex": {
+      "bytesPerToken": { "code": 3.2, "prose": 3.6 },
+      "categoryScale": { "toolResult": 0.9, "toolCall": 1.0, "other": 0.95 },
+      "imageTokens": 1000,
+      "systemBaselineTokens": 8000,
+      "systemBaselineWithBaseInstructions": 0,
+      "measured": {
+        "at": "2026-09-02",
+        "method": "reconcile scaleRaw p50 per dominant new-block category over non-legacy rollouts (legacy history_mode children and fork bootstraps excluded); scales unchanged: the three largest rollouts already sit at k p50 0.97-1.06",
+        "rollouts": 67,
+        "excludedRollouts": 13,
+        "requests": 3144,
+        "kP50": { "before": 0.9, "after": 0.941 },
+        "kP50ByCategory": { "tool_result.file": 0.922, "tool_result.shell": 0.908, "tool_result.search": 0.89, "tool_call": 0.94, "attachments": 1.023, "assistant_text": 0.963, "user": 0.929, "tool_result.other": 0.892, "subagent_handoff": 0.882, "tool_result.web": 0.906 },
+        "resultingError": { "median": 0.087, "p95": 0.189 }
+      }
+    }
+  },
+  "autoCompact": {
+    "$comment": "Auto-compaction threshold as a share of the context window (ADR-003 section 3), measured per (vendor, window) from the compactions in the local index and keyed by window size: a share measured on the 1M window says nothing about a 200k session. The forecast prefers a run's own auto compactions (median preTokens; provenance observed.vendor only when the vendor reported them) and falls back to `byWindow[<window>].share` when it rests on >= 3 events (`estimated.local`), else `defaultShare` (documented working assumption, `estimated.local`). Claude preTokens come from compactMetadata (observed.vendor); Codex preTokens are the previous request's total and the auto trigger is inferred (>= 0.75 x window), so its entries are marked `inferred` and never yield a vendor-observed threshold.",
+    "defaultShare": 0.95,
+    "claude": {
+      "byWindow": {
+        "1000000": { "share": 0.999, "events": 5, "min": 0.967, "max": 1.0, "at": "2026-09-02", "method": "median preTokens / window over trigger:auto compactions on the documented 1M window (shares 0.967, 0.9674, 0.999, 0.9996, 1.000); two events at 1,000,228 and 1,001,760 exceeded 1M (window raised to the peak) and were excluded" }
+      },
+      "measured": { "at": "2026-09-02", "windows": { "200000": { "events": 0, "note": "no auto-compaction on a 200k window in the local corpus; defaultShare applies" }, "1000000": { "events": 5, "manualEvents": 4, "manualShareMedian": 0.955 } } }
+    },
+    "codex": {
+      "byWindow": {
+        "258400": { "share": 0.853, "events": 14, "min": 0.815, "max": 0.912, "inferred": true, "at": "2026-09-02", "method": "median preTokens / model_context_window over inferred auto compactions in 7 rollouts (shares 0.815-0.912)" }
+      }
+    }
+  }
+}

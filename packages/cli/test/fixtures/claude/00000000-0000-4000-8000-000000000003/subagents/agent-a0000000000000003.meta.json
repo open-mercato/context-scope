@@ -1,0 +1,7 @@
+{
+  "agentType": "Explore",
+  "description": "Nested lorem",
+  "toolUseId": "toolu_03a00000000000000010003",
+  "spawnDepth": 2,
+  "parentAgentId": "a0000000000000001"
+}

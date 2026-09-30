@@ -1,0 +1,562 @@
+{
+  "repo": {
+    "name": "context-viewer",
+    "root": "cwd",
+    "git": true
+  },
+  "vendorsDetected": [
+    "claude",
+    "codex"
+  ],
+  "instructionFiles": [
+    {
+      "path": "~/.claude/CLAUDE.md",
+      "scope": "user",
+      "vendors": [
+        "claude"
+      ],
+      "bytes": 2140,
+      "estTokens": 560,
+      "precedence": 1,
+      "mtime": "2026-05-31T14:05:00.000Z",
+      "loadState": "observed.loaded",
+      "brokenRefs": []
+    },
+    {
+      "path": "CLAUDE.md",
+      "scope": "project",
+      "vendors": [
+        "claude"
+      ],
+      "bytes": 16900,
+      "estTokens": 4180,
+      "precedence": 2,
+      "mtime": "2026-08-30T14:05:00.000Z",
+      "loadState": "observed.loaded",
+      "brokenRefs": []
+    },
+    {
+      "path": ".claude/CLAUDE.local.md",
+      "scope": "local",
+      "vendors": [
+        "claude"
+      ],
+      "bytes": 780,
+      "estTokens": 210,
+      "precedence": 3,
+      "mtime": "2026-07-23T14:05:00.000Z",
+      "loadState": "expected.load",
+      "brokenRefs": []
+    },
+    {
+      "path": ".claude/rules/testing.md",
+      "scope": "rules",
+      "vendors": [
+        "claude"
+      ],
+      "bytes": 3420,
+      "estTokens": 860,
+      "precedence": 4,
+      "mtime": "2026-02-04T14:05:00.000Z",
+      "loadState": "expected.load",
+      "brokenRefs": [
+        "scripts/test-all.sh"
+      ],
+      "pathsFrontmatter": []
+    },
+    {
+      "path": ".claude/rules/ui.md",
+      "scope": "rules",
+      "vendors": [
+        "claude"
+      ],
+      "bytes": 4510,
+      "estTokens": 1130,
+      "precedence": 5,
+      "mtime": "2026-08-21T14:05:00.000Z",
+      "loadState": "discoverable",
+      "brokenRefs": [],
+      "pathsFrontmatter": [
+        "packages/ui/**"
+      ]
+    },
+    {
+      "path": "packages/cli/CLAUDE.md",
+      "scope": "nested",
+      "vendors": [
+        "claude"
+      ],
+      "bytes": 2980,
+      "estTokens": 740,
+      "precedence": 6,
+      "mtime": "2026-08-13T14:05:00.000Z",
+      "loadState": "discoverable",
+      "brokenRefs": [
+        "packages/cli/docs/api.md",
+        "scripts/release.sh"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "name": "release-notes",
+      "path": ".claude/skills/release-notes/SKILL.md",
+      "scope": "project",
+      "hasDescription": true,
+      "descriptionChars": 212,
+      "bodyEstTokens": 1840,
+      "frontmatterValid": true,
+      "invocations30d": 7
+    },
+    {
+      "name": "db-migrate",
+      "path": ".claude/skills/db-migrate/SKILL.md",
+      "scope": "project",
+      "hasDescription": false,
+      "descriptionChars": 0,
+      "bodyEstTokens": 960,
+      "frontmatterValid": true,
+      "invocations30d": 0
+    },
+    {
+      "name": "dataviz",
+      "path": "~/.claude/skills/dataviz/SKILL.md",
+      "scope": "user",
+      "hasDescription": true,
+      "descriptionChars": 1080,
+      "bodyEstTokens": 3320,
+      "frontmatterValid": false,
+      "invocations30d": 3
+    },
+    {
+      "name": "pr-review",
+      "path": "~/.claude/plugins/cache/reviewer/skills/pr-review/SKILL.md",
+      "scope": "plugin",
+      "hasDescription": true,
+      "descriptionChars": 14,
+      "bodyEstTokens": 2150,
+      "frontmatterValid": true,
+      "invocations30d": 12
+    }
+  ],
+  "agents": [
+    {
+      "name": "audit-deepdive",
+      "path": ".claude/agents/audit-deepdive.md",
+      "scope": "project",
+      "model": "sonnet",
+      "tools": [
+        "Read",
+        "Grep",
+        "Glob",
+        "Bash"
+      ],
+      "descriptionChars": 240,
+      "runs30d": 5
+    },
+    {
+      "name": "docs-writer",
+      "path": ".claude/agents/docs-writer.md",
+      "scope": "project",
+      "model": "haiku",
+      "tools": [
+        "Read",
+        "Write",
+        "Edit"
+      ],
+      "descriptionChars": 118,
+      "runs30d": 2
+    },
+    {
+      "name": "security-scan",
+      "path": "~/.claude/agents/security-scan.md",
+      "scope": "user",
+      "descriptionChars": 310,
+      "runs30d": 0
+    }
+  ],
+  "hooks": [
+    {
+      "event": "PostToolUse",
+      "matcher": "Edit|Write",
+      "command": "npm run lint --silent -- --fix",
+      "scope": "project",
+      "runs30d": 214,
+      "stdoutP50": 40,
+      "stdoutP95": 2380
+    },
+    {
+      "event": "Stop",
+      "command": "git status --short | head -20",
+      "scope": "project",
+      "runs30d": 61,
+      "stdoutP50": 90,
+      "stdoutP95": 310
+    },
+    {
+      "event": "SessionStart",
+      "command": "echo \"branch: $(git branch --show-current)\"",
+      "scope": "user",
+      "runs30d": 18,
+      "stdoutP50": 12,
+      "stdoutP95": 14
+    }
+  ],
+  "mcpServers": [
+    {
+      "name": "github",
+      "scope": "project",
+      "transport": "stdio",
+      "toolsObserved": [
+        "mcp__github__list_issues",
+        "mcp__github__get_issue",
+        "mcp__github__create_issue",
+        "mcp__github__update_issue",
+        "mcp__github__list_pull_requests",
+        "mcp__github__get_pull_request",
+        "mcp__github__create_pull_request",
+        "mcp__github__merge_pull_request",
+        "mcp__github__list_commits",
+        "mcp__github__get_commit",
+        "mcp__github__search_code",
+        "mcp__github__search_issues",
+        "mcp__github__list_branches",
+        "mcp__github__create_branch",
+        "mcp__github__get_file_contents",
+        "mcp__github__push_files",
+        "mcp__github__create_or_update_file",
+        "mcp__github__list_workflows",
+        "mcp__github__run_workflow",
+        "mcp__github__get_workflow_run",
+        "mcp__github__list_releases",
+        "mcp__github__create_release"
+      ],
+      "invocations30d": 41
+    },
+    {
+      "name": "postgres",
+      "scope": "project",
+      "transport": "stdio",
+      "toolsObserved": [
+        "mcp__postgres__query",
+        "mcp__postgres__list_tables",
+        "mcp__postgres__describe_table"
+      ],
+      "invocations30d": 0
+    },
+    {
+      "name": "claude-in-chrome",
+      "scope": "user",
+      "transport": "stdio",
+      "toolsObserved": [
+        "mcp__claude-in-chrome__navigate",
+        "mcp__claude-in-chrome__computer",
+        "mcp__claude-in-chrome__read_page",
+        "mcp__claude-in-chrome__find",
+        "mcp__claude-in-chrome__read_console_messages"
+      ],
+      "invocations30d": 27
+    }
+  ],
+  "commands": [
+    {
+      "name": "ship",
+      "path": ".claude/commands/ship.md"
+    },
+    {
+      "name": "triage",
+      "path": ".claude/commands/triage.md"
+    }
+  ],
+  "memory": {
+    "present": true,
+    "bytes": 18440,
+    "files": 4,
+    "indexBytes": 0
+  },
+  "settings": [
+    {
+      "path": "~/.claude/settings.json",
+      "scope": "user",
+      "keys": [
+        "model",
+        "hooks",
+        "permissions"
+      ]
+    },
+    {
+      "path": ".claude/settings.json",
+      "scope": "project",
+      "keys": [
+        "hooks",
+        "permissions",
+        "enabledMcpjsonServers"
+      ]
+    },
+    {
+      "path": ".claude/settings.local.json",
+      "scope": "local",
+      "keys": [
+        "permissions"
+      ]
+    }
+  ],
+  "startupBudget": {
+    "claude": {
+      "instructions": {
+        "value": 5810,
+        "provenance": "estimated.local"
+      },
+      "skills": {
+        "value": 330,
+        "provenance": "estimated.local"
+      },
+      "agents": {
+        "value": 170,
+        "provenance": "estimated.local"
+      },
+      "mcpTools": {
+        "value": 6900,
+        "provenance": "estimated.local"
+      },
+      "total": {
+        "value": 13210,
+        "provenance": "estimated.local"
+      }
+    },
+    "codex": {
+      "instructions": {
+        "value": 2450,
+        "provenance": "observed.artifact"
+      },
+      "skills": {
+        "value": 0,
+        "provenance": "estimated.local"
+      },
+      "agents": {
+        "value": 0,
+        "provenance": "estimated.local"
+      },
+      "mcpTools": {
+        "value": 1100,
+        "provenance": "estimated.local"
+      },
+      "total": {
+        "value": 3550,
+        "provenance": "estimated.local"
+      }
+    }
+  },
+  "findings": [
+    {
+      "id": "S-01:7ab3d0e5c1",
+      "ruleId": "S-01",
+      "severity": "high",
+      "scope": "setup",
+      "vendor": "claude",
+      "title": "Instruction file oversized",
+      "whyItMatters": "Instructions are resent on every request and sit at the top of the prompt; every 1k tokens there is paid on every turn and competes with task content for attention.",
+      "evidence": [
+        {
+          "kind": "file",
+          "ref": "CLAUDE.md",
+          "label": "CLAUDE.md",
+          "value": 4180,
+          "unit": "tokens",
+          "provenance": "estimated.local"
+        },
+        {
+          "kind": "metric",
+          "ref": "chain",
+          "label": "loaded chain total",
+          "value": 6940,
+          "unit": "tokens",
+          "provenance": "estimated.local"
+        }
+      ],
+      "fix": {
+        "platform": "claude",
+        "summary": "Move path-specific guidance into scoped rules",
+        "path": ".claude/rules/api.md",
+        "snippet": "---\npaths:\n  - \"packages/api/**\"\n---\n# API conventions\n(move the API section of CLAUDE.md here; keep CLAUDE.md to conventions and pointers)"
+      },
+      "thresholdKeys": [
+        "instructionFileTokens",
+        "instructionChainTokens"
+      ],
+      "tokensAffected": 4180,
+      "recurrence": 9
+    },
+    {
+      "id": "S-08:0d4b7e2a66",
+      "ruleId": "S-08",
+      "severity": "medium",
+      "scope": "setup",
+      "vendor": "claude",
+      "title": "MCP schema bloat",
+      "whyItMatters": "Every tool schema is prompt text on every request; a 22-tool server can cost more than the entire CLAUDE.md.",
+      "evidence": [
+        {
+          "kind": "file",
+          "ref": ".mcp.json",
+          "label": "server github: tools observed",
+          "value": 22,
+          "unit": "count",
+          "provenance": "observed.artifact"
+        },
+        {
+          "kind": "metric",
+          "ref": "mcpSchemaTokens",
+          "label": "estimated schema tokens at startup",
+          "value": 5300,
+          "unit": "tokens",
+          "provenance": "estimated.local"
+        }
+      ],
+      "fix": {
+        "platform": "claude",
+        "summary": "Disable the server for this project or rely on deferred tool loading",
+        "snippet": "claude mcp remove github -s project\n# re-add at user scope only when needed: claude mcp add github -s user -- npx @modelcontextprotocol/server-github"
+      },
+      "thresholdKeys": [
+        "mcpServerTools",
+        "mcpTotalTools"
+      ],
+      "tokensAffected": 5300,
+      "recurrence": 9
+    },
+    {
+      "id": "S-09:b7d13e4f09",
+      "ruleId": "S-09",
+      "severity": "medium",
+      "scope": "setup",
+      "vendor": "claude",
+      "title": "MCP server never used",
+      "whyItMatters": "Pure schema cost with no observed benefit: the server's tools were never invoked across 30 days of indexed sessions.",
+      "evidence": [
+        {
+          "kind": "file",
+          "ref": ".mcp.json",
+          "label": "server postgres: invocations in 30 days",
+          "value": 0,
+          "unit": "count",
+          "provenance": "derived.exact"
+        }
+      ],
+      "fix": {
+        "platform": "claude",
+        "summary": "Disable it for this project; re-enable on demand",
+        "snippet": "claude mcp remove postgres -s project"
+      },
+      "thresholdKeys": [],
+      "tokensAffected": 1400,
+      "recurrence": 9
+    },
+    {
+      "id": "S-05:5c9e2b1a48",
+      "ruleId": "S-05",
+      "severity": "medium",
+      "scope": "setup",
+      "vendor": "claude",
+      "title": "Instruction references a missing path",
+      "whyItMatters": "The model trusts instructions; a dead path costs a failed tool call and a wrong assumption per session.",
+      "evidence": [
+        {
+          "kind": "file",
+          "ref": ".claude/rules/testing.md",
+          "label": ".claude/rules/testing.md references scripts/test-all.sh",
+          "provenance": "observed.artifact"
+        }
+      ],
+      "fix": {
+        "platform": "both",
+        "summary": "Update or delete the reference",
+        "path": ".claude/rules/testing.md",
+        "snippet": "- Run `scripts/test-all.sh` before committing\n+ Run `npm test --workspaces` before committing"
+      },
+      "thresholdKeys": [],
+      "tokensAffected": 900,
+      "recurrence": 9
+    },
+    {
+      "id": "S-12:2e6a9c0d77",
+      "ruleId": "S-12",
+      "severity": "medium",
+      "scope": "setup",
+      "vendor": "codex",
+      "title": "Codex sessions without AGENTS.md",
+      "whyItMatters": "Evidence shows repository instructions reduce runtime and output tokens for comparable completion; three Codex sessions ran here with no AGENTS.md.",
+      "evidence": [
+        {
+          "kind": "metric",
+          "ref": "codexSessions",
+          "label": "Codex sessions for this repo",
+          "value": 3,
+          "unit": "count",
+          "provenance": "observed.artifact"
+        }
+      ],
+      "fix": {
+        "platform": "codex",
+        "summary": "Create AGENTS.md with conventions, build and test commands, and layout",
+        "path": "AGENTS.md",
+        "snippet": "# AGENTS.md\n## Build\nnpm install && npm run build\n## Test\nnpm test\n## Layout\npackages/cli (Node, zero deps), packages/ui (Preact)"
+      },
+      "thresholdKeys": [],
+      "tokensAffected": 0,
+      "recurrence": 3
+    },
+    {
+      "id": "S-10:6f0b3d8e15",
+      "ruleId": "S-10",
+      "severity": "low",
+      "scope": "setup",
+      "vendor": "claude",
+      "title": "Memory index empty",
+      "whyItMatters": "Without memory, each session re-discovers the same facts through tool calls.",
+      "evidence": [
+        {
+          "kind": "file",
+          "ref": "~/.claude/projects/-Users-me-projects-context-viewer/memory/MEMORY.md",
+          "label": "MEMORY.md",
+          "value": 0,
+          "unit": "chars",
+          "provenance": "observed.artifact"
+        },
+        {
+          "kind": "metric",
+          "ref": "sessions",
+          "label": "sessions for this repo",
+          "value": 6,
+          "unit": "count",
+          "provenance": "observed.artifact"
+        }
+      ],
+      "fix": {
+        "platform": "claude",
+        "summary": "Seed MEMORY.md with durable facts",
+        "path": "~/.claude/projects/-Users-me-projects-context-viewer/memory/MEMORY.md",
+        "snippet": "- Monorepo: packages/cli (Node ESM, zero deps) and packages/ui (Preact + esbuild)\n- Tests: node --test packages/cli/test\n- UI build output is committed to packages/cli/ui"
+      },
+      "thresholdKeys": [
+        "memoryMinSessions"
+      ],
+      "tokensAffected": 600,
+      "recurrence": 6
+    }
+  ],
+  "excluded": [
+    {
+      "path": "packages/cli/test/fixtures/repo-a/CLAUDE.md",
+      "reason": "fixture"
+    },
+    {
+      "path": "packages/cli/test/fixtures/repo-a/.claude/rules/api.md",
+      "reason": "fixture"
+    },
+    {
+      "path": "packages/cli/test/fixtures/repo-b/AGENTS.md",
+      "reason": "fixture"
+    }
+  ]
+}

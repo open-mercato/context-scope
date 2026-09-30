@@ -1,0 +1,5 @@
+{
+  "budgets": { "startupTokens": 6000, "instructionFileTokens": 3000 },
+  "failOn": "high",
+  "ignore": ["packages/cli/test/fixtures/**", "packages/ui/dev/fixtures/**"]
+}

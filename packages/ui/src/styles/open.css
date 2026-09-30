@@ -1,0 +1,26 @@
+/* Demo / export banner (main.tsx DemoBanner) and the #/open screen (screens/Open.tsx). */
+.demo-banner { background: var(--warn-bg); color: var(--text); border-bottom: 1px solid var(--border); }
+.demo-banner-memory { background: var(--info-bg); }
+.demo-banner-inner { max-width: 1280px; margin: 0 auto; padding: 6px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; }
+.demo-banner-tag { font-weight: 700; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--warn); }
+.demo-banner-memory .demo-banner-tag { color: var(--info); }
+.demo-banner-text { color: var(--text); }
+.demo-banner-text code { font-size: 12px; }
+.demo-banner-links { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+.demo-banner-links .btn { padding: 2px 8px; font-size: 12px; }
+/* Below 900 px the banner keeps one line: tag, the short honesty line, the buttons (#18). */
+@media (max-width: 900px) { .demo-banner-inner { padding: 4px 12px; gap: 8px; } .demo-banner-long { display: none; } }
+
+.open-screen .screen-sub { max-width: 720px; }
+.dropzone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 180px; padding: 28px 20px; border: 2px dashed var(--border-strong); border-radius: var(--radius); background: var(--surface); color: var(--muted); text-align: center; cursor: pointer; transition: border-color 120ms ease, background 120ms ease; }
+.dropzone:hover, .dropzone:focus-visible { border-color: var(--accent); color: var(--text); outline: none; }
+.dropzone-active { border-color: var(--accent); background: var(--accent-bg); color: var(--text); }
+.dropzone-error { border-color: var(--danger); }
+.dropzone-icon { color: var(--accent); }
+.dropzone-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+.dropzone-sub { margin: 0; font-size: 12px; }
+.open-current { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font-size: 13px; }
+.open-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; align-items: start; }
+.open-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.open-list code { font-size: 12px; }
+.open-grid .fix-snippet { margin: 0 0 12px; white-space: pre-wrap; word-break: break-word; }

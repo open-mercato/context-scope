@@ -6,20 +6,25 @@ import "./globals.css";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
+const TITLE = "ContextScope";
+const DESCRIPTION = "See what filled your coding agent's context window — request by request, locally. A profiler for Claude Code and Codex sessions: where the context went, what subagents cost and returned, and the one setup change to make first.";
+
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const imageUrl = `${protocol}://${host}/og.png`;
   return {
-    title: "Attention Lab — Why Transformer Attention Scales as N²",
-    description: "An interactive explainer for token-to-token attention and the quadratic cost of full-context transformers.",
+    title: TITLE,
+    description: DESCRIPTION,
+    icons: { icon: "/favicon.svg" },
     openGraph: {
-      title: "Attention Lab — N Tokens → N² Relationships",
-      description: "Explore why full transformer attention creates a quadratic number of token relationships.",
-      images: [{ url: `${protocol}://${host}/attention-lab-og.png`, width: 1729, height: 910, alt: "Attention Lab transformer attention visualization" }],
+      title: TITLE,
+      description: "See what filled your coding agent's context window — request by request, locally.",
+      type: "website",
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: "ContextScope: a session's context occupancy chart on the dark theme" }],
     },
-    twitter: { card: "summary_large_image", title: "Attention Lab", description: "Explore why transformer attention scales as N².", images: [`${protocol}://${host}/attention-lab-og.png`] },
+    twitter: { card: "summary_large_image", title: TITLE, description: "See what filled your coding agent's context window — request by request, locally.", images: [imageUrl] },
   };
 }
 

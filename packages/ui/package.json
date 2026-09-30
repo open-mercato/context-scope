@@ -1,0 +1,20 @@
+{
+  "name": "@contextscope/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ContextScope browser UI, prebuilt into packages/cli/ui and served by the local companion",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "dev": "node dev/server.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "@preact/signals": "2.5.1",
+    "esbuild": "0.27.3",
+    "preact": "10.28.3",
+    "typescript": "5.9.3"
+  }
+}
