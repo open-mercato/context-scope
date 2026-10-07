@@ -51,7 +51,8 @@ test("the landing source keeps the site static and honest", async () => {
   ]);
   assert.doesNotMatch(page, /chatgpt-auth|next\/headers|force-dynamic/, "no sign-in helpers, no per-request identity");
   assert.doesNotMatch(page, /next\/image/, "screenshots are plain images (no optimizer binding)");
-  assert.doesNotMatch(page, /https?:\/\/github\.com\/[^"]*|https?:\/\/www\.npmjs\.com/, "no invented repository or package URLs");
+  // The repository exists (open-mercato/context-scope); the npm package is not published yet, so no npm link until it is (docs/publishing.md).
+  assert.doesNotMatch(page.replace(/https:\/\/github\.com\/open-mercato\/context-scope/g, ""), /https?:\/\/github\.com\/[^"]*|https?:\/\/www\.npmjs\.com/, "no invented repository or package URLs");
   assert.match(layout, /title:\s*TITLE|title:\s*"ContextScope"/);
   assert.match(layout, /\/og\.png/);
   assert.match(packageJson, /"name": "contextscope-site"/);

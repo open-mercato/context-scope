@@ -82,7 +82,7 @@ import os from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { readJsonl } from "../ir/jsonl.mjs";
-import { byteLength, detectKind, estimateTokens, imageTokensFor } from "../ir/estimate.mjs";
+import { byteLength, detectBlockKind, detectKind, estimateTokens, imageTokensFor } from "../ir/estimate.mjs";
 import { finalizeRun, roundWindow } from "../ir/finalize.mjs";
 import { displaySessionFile, encodedProjectDirToKey, projectKeyFor } from "../ir/project.mjs";
 import { classifyBashCommand, classifyTool, partialReadOf, TARGET_INPUT_KEYS } from "./claude-tools.mjs";
@@ -355,7 +355,8 @@ class ScopeBuilder {
   addBlock({ at, category, content, estTokens, label, extra = {} }) {
     const text = typeof content === "string" ? content : "";
     const blockBytes = byteLength(text);
-    const kind = detectKind(text);
+    // `extra.kind` is a caller's content-type verdict (a binary document read); the heuristic otherwise.
+    const kind = extra.kind ?? detectKind(text);
     const seq = this.blocks.length;
     const block = {
       id: `${this.scopeId}:${seq}`,
@@ -493,7 +494,6 @@ class ScopeBuilder {
     // (handoff when the task id is a known agent), the remaining text stays the tool result.
     const embedded = kind !== "agent" && text.includes("<task-notification>") ? splitNotifications(text) : null;
     if (embedded) text = embedded.remainder;
-    const estTokens = images ? calibratedTokens(text, detectKind(text), category) + images * imageTokensFor(VENDOR) : undefined;
     const raw = v.toolUseResult;
     const isError = item.is_error === true || (typeof raw === "string" && raw.length > 0) || v.toolDenialKind !== undefined;
     const tool = { name, kind, argsHash: use?.argsHash ?? sha1("") };
@@ -509,6 +509,12 @@ class ScopeBuilder {
     }
     const label = tool.target ?? name;
     const extra = { tool, toolUseId: item.tool_use_id };
+    // A PDF / image / office file read (`Read foo.pdf`, `cat logo.png`) reaches the model as a converted
+    // document, not as the base64 the transcript carries: the text ratio overshoots by ~10x. Only when the
+    // target's extension and the content agree (estimate-core.mjs `detectBinary`) is the block `binary`.
+    const blockKind = detectBlockKind(text, { target: tool.target });
+    if (blockKind === "binary") extra.kind = "binary";
+    const estTokens = images ? calibratedTokens(text, blockKind, category) + images * imageTokensFor(VENDOR) : undefined;
 
     if (kind === "agent" && raw && typeof raw === "object" && !Array.isArray(raw) && typeof raw.agentId === "string") {
       const agentId = raw.agentId;

@@ -40,7 +40,7 @@ export default {
       fix: platformFix(run, {
         claude: { summary: "Start a fresh session per task, delegate exploration to subagents, and fix fat results (B-01/B-03) first.", snippet: "/clear   # new task, fresh window\nAgent { description: \"explore\", prompt: \"Investigate <question>; return findings only, under 600 words.\" }" },
         codex: { summary: "Start a fresh session per task, delegate exploration to a subagent, and reduce startup mass (S-01).", snippet: "/new   # fresh thread per task\n# and in AGENTS.md: keep tool output short (head/tail); delegate broad exploration to a subagent that returns a summary" },
-      }),
+      }, { scope: run.scopes[0] }),
     })];
   },
 };

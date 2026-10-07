@@ -1,7 +1,8 @@
 import { chainFor } from "../setup/precedence.mjs";
 import { observedChainFor } from "../setup/budget.mjs";
 import { fileEvidence, makeFinding, metricEvidence } from "../setup/findings.mjs";
-import { estimateTokensFromBytes } from "../ir/estimate.mjs";
+import { basisFor, estimateTokensFromBytes, estTokensFor } from "../ir/estimate.mjs";
+import { formatBasis } from "../util/format.mjs";
 
 const FIX = {
   claude: {
@@ -49,7 +50,8 @@ const rule = {
         tokensAffected: file.estTokens,
         ...(lazy ? { severity: "low", title: "Nested instruction file oversized" } : {}),
         evidence: [
-          fileEvidence(file.path, `${file.path} is ${file.estTokens} est. tokens (${file.bytes} bytes); threshold ${fileMax}`, file.estTokens),
+          // estTokens is the file's own vendor's figure, or the larger of two vendors' (estBasis says which).
+          fileEvidence(file.path, `${file.path} is ${file.estTokens} est. tokens (${file.bytes} bytes, ${formatBasis(file.estBasis)}); threshold ${fileMax}`, file.estTokens),
           metricEvidence(file.path, `${file.bytes} bytes on disk, load state ${file.loadState}`, file.bytes, "count", "observed.artifact"),
         ],
         fix: lazy
@@ -62,24 +64,27 @@ const rule = {
       // The observed chain (InstructionsLoaded hook) wins over the documented expectation when present.
       const observedChain = observedChainFor(setup.instructionFiles, vendor);
       const chain = observedChain ?? chainFor(setup.instructionFiles, vendor);
-      let total = chain.reduce((sum, f) => sum + f.estTokens, 0);
+      // The chain as this vendor's tokenizer sees it (the same per-vendor figure as the startup budget).
+      const tokensOf = (f) => estTokensFor(f, vendor);
+      const basis = formatBasis(basisFor([vendor])); // "neutral ratio" for a vendor without a calibration (gemini)
+      let total = chain.reduce((sum, f) => sum + tokensOf(f), 0);
       let provenance = observedChain ? "observed.artifact" : "estimated.local";
       if (vendor === "codex" && Number.isFinite(input.sessionStats?.codexInstructionChars) && input.sessionStats.codexInstructionChars > 0) {
-        total = estimateTokensFromBytes(input.sessionStats.codexInstructionChars, "prose");
+        total = estimateTokensFromBytes(input.sessionStats.codexInstructionChars, "prose", { vendor: "codex" });
         provenance = "observed.artifact";
       }
       if (total <= chainMax || !chain.length) continue;
-      const largest = [...chain].sort((a, b) => b.estTokens - a.estTokens)[0];
+      const largest = [...chain].sort((a, b) => tokensOf(b) - tokensOf(a))[0];
       findings.push(makeFinding(rule, {
         primaryRef: `chain:${vendor}`,
         vendor,
         title: "Instruction chain oversized",
         tokensAffected: total,
         evidence: [
-          metricEvidence(`chain:${vendor}`, `${vendor} instruction chain is ${total} est. tokens across ${chain.length} file(s)${observedChain ? " (membership observed by the InstructionsLoaded hook)" : ""}; threshold ${chainMax}`, total, "tokens", provenance),
-          ...chain.slice(0, 8).map(f => fileEvidence(f.path, `${f.path} (${f.scope}, precedence ${f.precedence})`, f.estTokens)),
+          metricEvidence(`chain:${vendor}`, `${vendor} instruction chain is ${total} est. tokens (${basis}) across ${chain.length} file(s)${observedChain ? " (membership observed by the InstructionsLoaded hook)" : ""}; threshold ${chainMax}`, total, "tokens", provenance),
+          ...chain.slice(0, 8).map(f => fileEvidence(f.path, `${f.path} (${f.scope}, precedence ${f.precedence})`, tokensOf(f))),
         ],
-        fix: { platform: vendor, ...(FIX[vendor] ?? FIX.claude), summary: `${FIX[vendor]?.summary ?? FIX.claude.summary} Start with ${largest.path} (${largest.estTokens} tokens).` },
+        fix: { platform: vendor, ...(FIX[vendor] ?? FIX.claude), summary: `${FIX[vendor]?.summary ?? FIX.claude.summary} Start with ${largest.path} (${tokensOf(largest)} tokens, ${basis}).` },
       }));
     }
     return findings;

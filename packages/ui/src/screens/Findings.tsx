@@ -122,7 +122,7 @@ export function FindingsScreen({ scope, vendor }: FindingsScreenProps) {
           <h1>Findings</h1>
           <p class="screen-sub">
             {groups.length ? (
-              <>{plural(groups.length, "rule")} · {plural(findings.length, "finding")} · <span class="sev-text sev-high">{counts.high} high</span> · <span class="sev-text sev-medium">{counts.medium} medium</span> · <span class="sev-text sev-low">{counts.low} low</span> · one card per rule, ordered by severity, tokens affected, sessions</>
+              <>{plural(groups.length, "rule")} · {plural(findings.length, "finding")} · <span class="sev-text sev-high">{counts.high} high</span> · <span class="sev-text sev-medium">{counts.medium} medium</span> · <span class="sev-text sev-low">{counts.low} low</span> · one card per rule, ordered by severity, tokens affected, sessions · fixes are hypotheses to test</>
             ) : "No findings match the current filters"}
           </p>
         </div>

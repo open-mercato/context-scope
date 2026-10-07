@@ -4,7 +4,7 @@
  * instruction-audit-agent.mjs, narrowed to things that look like files/dirs.
  */
 import path from "node:path";
-import { isDirectory, isInside, statSafe } from "./fs.mjs";
+import { IGNORED_DIRS, isDirectory, isInside, statSafe } from "./fs.mjs";
 
 const MAX_CANDIDATES = 60;
 const DOMAIN_TLD = /\.(com|org|net|io|dev|ai|co|app|md|sh|edu|gov)$/i;
@@ -71,15 +71,34 @@ const EXAMPLE_CONTEXT = /\b(?:for example|for instance|e\.g\.|such as|like|np\.|
 const OPTIONAL_CONTEXT = /\b(?:submodule|optional|if present|when present|uncommitted|not committed|opcjonaln\w*)\b/i;
 // A path the text says no longer exists ("`lib/x.ts` ... are gone") is history, not a reference.
 const ABSENT_CONTEXT = /\b(?:gone|removed|deleted|no longer|renamed|deprecated|was replaced|usunięt\w*)\b/i;
+// A line that says a path is not used, must not be created or does not exist ("do not add `lib/utils.ts`",
+// "`.env` nie istnieje") describes an absence; reporting it as missing would be the opposite of its meaning.
+const NEGATION_CONTEXT = /\b(?:not|never|no longer|don[’']?t|doesn[’']?t|isn[’']?t|nie|nigdy)\b/i;
+// A line about a template, pattern or naming convention shows the shape of a path, not one that exists.
+const TEMPLATE_CONTEXT = /\b(?:templates?|patterns?|naming|conventions?|formats?)\b/i;
+
+/** `packages/NAME/src`, `modules/MODULE_NAME`, `docs/example.md`: a placeholder path, never a reference to a file. */
+export function isPlaceholderPath(value) {
+  // `NAME` only in caps: `src/rename.ts` and `username/` are real paths.
+  if (/NAME/.test(value) || /example|placeholder/i.test(value)) return true;
+  for (const segment of String(value).replace(/\/+$/, "").split("/")) {
+    if (!segment || /^\.{1,2}$/.test(segment)) continue;
+    const stem = segment.includes(".") ? segment.slice(0, segment.indexOf(".")) : segment;
+    // All-caps with an underscore (`MODULE_NAME`) or an all-caps directory segment; `README.md` keeps its stem (no underscore, has an extension).
+    if (/^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/.test(stem)) return true;
+    if (!segment.includes(".") && /^[A-Z][A-Z0-9]{2,}$/.test(segment)) return true;
+  }
+  return false;
+}
 
 /** Backticked tokens and @imports that look like repository paths. */
 export function extractPathCandidates(text) {
   const source = String(text);
-  const values = new Set(extractImports(source));
+  const values = new Set(extractImports(source).filter((value) => !isPlaceholderPath(value)));
   for (const match of source.matchAll(/`([^`\n]{1,160})`/g)) {
     const value = match[1].trim().replace(/[.,;:]+$/, "");
     if (value.startsWith("@")) continue; // package specifiers / decorators, not imports
-    if (!looksLikePath(value)) continue;
+    if (!looksLikePath(value) || isPlaceholderPath(value)) continue;
     const lineStart = source.lastIndexOf("\n", match.index) + 1;
     const lineEnd = source.indexOf("\n", match.index);
     const line = source.slice(lineStart, lineEnd === -1 ? source.length : lineEnd);
@@ -87,6 +106,7 @@ export function extractPathCandidates(text) {
     // The clause the path sits in: from the last "(", "|" or sentence break before it.
     const clause = before.slice(Math.max(before.lastIndexOf("("), before.lastIndexOf("|"), before.lastIndexOf(". ")) + 1);
     if (EXAMPLE_CONTEXT.test(clause) || OPTIONAL_CONTEXT.test(line) || ABSENT_CONTEXT.test(line)) continue;
+    if (NEGATION_CONTEXT.test(line) || TEMPLATE_CONTEXT.test(line)) continue;
     values.add(value);
   }
   return [...values].slice(0, MAX_CANDIDATES);
@@ -122,8 +142,8 @@ export function suffixIndex(files) {
 }
 
 /**
- * Returns the subset of candidates that resolve to nothing inside the repo (or
- * home for `~/` refs). Relative refs are tried against the repo root and the
+ * Returns the subset of candidates that resolve to nothing inside the repo
+ * (`~/` refs are skipped, see below). Relative refs are tried against the repo root and the
  * referencing file's directory; a bare file name (no slash) also counts as
  * found when any file with that name exists in the repo (`basenames`), and a
  * relative ref counts as found when it is a segment-suffix of a repository
@@ -133,7 +153,14 @@ export function suffixIndex(files) {
 export async function findBrokenRefs(candidates, { repoRoot, home, fileDir, basenames, suffixes }) {
   const broken = [];
   for (const candidate of candidates) {
+    // `~/` refs are never judged: the inventory does not say whether the home it was given is the
+    // real one (`check` substitutes an empty temp home unless --user-config), so a miss there says
+    // nothing about the user's machine.
+    if (candidate.startsWith("~/")) continue;
     if (!candidate.includes("/") && basenames?.has(candidate)) continue;
+    // A path under build output or a generated project (`dist/`, `node_modules/`, `target/`) exists only after a build.
+    const firstSegment = candidate.replace(/^\.\//, "").split("/")[0];
+    if (candidate.includes("/") && IGNORED_DIRS.has(firstSegment)) continue;
     if (suffixes && !candidate.startsWith("~/") && !candidate.includes("../")) {
       const key = candidate.replace(/^\.\//, "");
       if (suffixes.has(key) || (key.endsWith("/") ? suffixes.has(key) : suffixes.has(key + "/"))) continue;

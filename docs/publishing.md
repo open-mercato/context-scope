@@ -10,18 +10,17 @@ what drifted last time.
 
 ## TODO before the first publish
 
-- [ ] **Repository URL.** `package.json` (`repository`, `homepage`, `bugs`), the UI error boundary
-      (`packages/ui/src/main.tsx` "File an issue"), `docs/publishing.md` and the landing footer use the placeholder
-      `https://github.com/pat-lewczuk/contextscope`. No such remote exists yet (the only remote today is the
-      ChatGPT-team git host). Create the GitHub repository, push `main`, then replace the placeholder if the
-      owner/name differ (`grep -rn "pat-lewczuk/contextscope" --exclude-dir=node_modules .`).
+- [x] **Repository URL.** `https://github.com/open-mercato/context-scope` (2026-10-07) in `package.json`
+      (`repository`, `homepage`, `bugs`), `packages/ui/src/config.ts` (footer, "File an issue") and the landing
+      footer (`app/page.tsx`). The repository is still private; make it public before the first publish. The landing's
+      npm link stays "coming soon" until the package exists (`tests/rendered-html.test.mjs` enforces it).
 - [ ] **npm account and 2FA.** `npm login` as the publishing user; enable 2FA (auth-and-writes). Confirm the name is
       still free right before publishing: `npm view contextscope version` must fail with E404.
 - [ ] **Provenance needs CI.** `npm publish --provenance` only works from a supported CI (GitHub Actions with
       `id-token: write`); a laptop publish cannot carry provenance. Either:
   - [ ] create an npm **automation token** and store it as the `NPM_TOKEN` repository secret
         (`.github/workflows/publish.yml` reads it as `NODE_AUTH_TOKEN`), or
-  - [ ] configure npm **trusted publishing** for `pat-lewczuk/contextscope` + workflow `publish.yml` on npmjs.com
+  - [ ] configure npm **trusted publishing** for `open-mercato/context-scope` + workflow `publish.yml` on npmjs.com
         (package settings → Trusted publisher) and delete the `NODE_AUTH_TOKEN` line from the workflow.
 - [ ] **UI bundle is part of the tarball.** `packages/cli/ui/` (`index.html`, `app.js`, `app.css`, chunks) is built by
       `cd packages/ui && npm ci && npm run build`; both workflows build it before packing. `scripts/prepack.mjs`

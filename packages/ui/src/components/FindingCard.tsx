@@ -172,8 +172,8 @@ export function FindingCard({ finding, headline, subline, highlight, compact, pl
               <span class="finding-rule" title="Rule id">{finding.ruleId}</span>
             </span>
           </header>
-          <p class="finding-summary-fix" title={finding.whyItMatters}>
-            <span class="finding-k">Fix ({platform}):</span> {finding.fix.summary}
+          <p class="finding-summary-fix" title={`${finding.whyItMatters} The fix is a hypothesis: the measurement is exact or reconciled, the cause is inferred.`}>
+            <span class="finding-k">Suggested fix ({platform}):</span> {finding.fix.summary}
             {finding.fix.path ? <> → <code class="fix-path">{finding.fix.path}</code></> : null}
           </p>
         </div>
@@ -211,10 +211,11 @@ export function FindingCard({ finding, headline, subline, highlight, compact, pl
       ) : null}
       <div class="finding-fix">
         <div class="finding-fix-head">
-          <span class="finding-k">Fix ({platform}):</span> {finding.fix.summary}
+          <span class="finding-k">Suggested fix ({platform}):</span> {finding.fix.summary}
           {finding.fix.path ? <> → <code class="fix-path">{finding.fix.path}</code></> : null}
         </div>
         {finding.fix.snippet ? <pre class="fix-snippet" tabIndex={0}><code>{finding.fix.snippet}</code></pre> : null}
+        <p class="fix-note">A hypothesis, not a verdict: the numbers above are measured; the cause and the fix are inferred. Apply it, then check the next sessions.</p>
       </div>
       <footer class="finding-actions">
         {primary ? <a class="btn" href={primary}>Show evidence</a> : <button type="button" class="btn" disabled title="No navigable evidence">Show evidence</button>}

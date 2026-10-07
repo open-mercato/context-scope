@@ -5,7 +5,7 @@
  */
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { estimateTokens } from "../ir/estimate.mjs";
+import { estimateByVendor, pickEstimate } from "../ir/estimate.mjs";
 import { parseFrontmatter, asStringList } from "./frontmatter.mjs";
 import { extractImports, extractPathCandidates, findBrokenRefs, suffixIndex } from "./references.mjs";
 import { precedenceFor } from "./precedence.mjs";
@@ -157,7 +157,9 @@ export async function collectInstructionFiles({ repoRoot, home, vendorsDetected,
       vendors: [...vendors],
       bytes: read.bytes,
       hash: createHash("sha1").update(read.text).digest("hex"), // observed.artifact; joins a session's nested_memory / AGENTS.md block hash (ADR-005 section 2)
-      estTokens: estimateTokens(read.text, "prose"),
+      // One estimate per file (the same arithmetic as `contextscope tokens`): per vendor in estTokensBy;
+      // estTokens / estBasis are settled below, once the file's vendor set is final (imports, shared files).
+      ...estimateByVendor(read.text, { vendors }),
       precedence: precedenceFor(vendors[0], scope),
       mtime: read.mtime,
       loadState,
@@ -226,6 +228,9 @@ export async function collectInstructionFiles({ repoRoot, home, vendorsDetected,
   }
 
   const files = [...records.values()].sort((a, b) => a.precedence - b.precedence || a.path.localeCompare(b.path));
+  // The single number rests on the vendors that actually load the file: its own calibration for one
+  // vendor, the larger figure when two share it (a budget that passes on the larger passes on both).
+  for (const file of files) Object.assign(file, pickEstimate(file.estTokensBy, file.vendors));
 
   // Commit counts since mtime under each file's directory (for S-07), only inside a git repo.
   if (await hasGitDir(repoRoot)) {

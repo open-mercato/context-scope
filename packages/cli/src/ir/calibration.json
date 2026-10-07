@@ -1,8 +1,12 @@
 {
   "$comment": "Every estimator constant lives here (ADR-002 F). Adapters carry no numbers. `measured` is the output of scripts/calibrate.mjs run against the local index (250 files, chars-v1 runs; slopes and k are constant-independent); `calibrationVersion` must change whenever a constant changes (test/ir-calibration.test.mjs pins the sha1 of the constants, i.e. everything but `$comment` and `measured`, next to it).",
   "estimatorVersion": "chars-v2",
-  "calibrationVersion": "cal-2026-09-02d",
+  "calibrationVersion": "cal-2026-10-07a",
   "neutral": { "bytesPerToken": { "code": 3.2, "prose": 3.6 } },
+  "binary": {
+    "$comment": "Tool results that carry a binary document (a PDF, image, .docx or .xlsx read as base64 or raw bytes): the vendor converts the document before tokenizing, so the text ratios overshoot by an order of magnitude. Fitted on ONE observation: a 532 KB PDF read that the vendor billed at about 13k tokens (147.8k with the prose ratio). Applies in place of the vendor bytes-per-token when a block's kind is `binary`; the vendor envelope / category scale still apply.",
+    "bytesPerToken": 40
+  },
   "vendors": {
     "claude": {
       "bytesPerToken": { "code": 2.12, "prose": 2.26 },

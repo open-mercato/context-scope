@@ -33,7 +33,8 @@ export function toolCall(scopeId, seq, firstRequest, { name, kind, args, target,
 
 export function toolResult(scopeId, seq, firstRequest, { name, kind, target, toolUseId, estTokens, category }) {
   const cat = category ?? `tool_result.${["file", "shell", "search", "web"].includes(kind) ? kind : "other"}`;
-  return blk(scopeId, seq, cat, estTokens, firstRequest, { tool: { name, kind, argsHash: sha1(`${name}:${target ?? ""}`), target }, toolUseId, label: target ?? name });
+  // Result hash stands for the result content: the same tool on the same target with the same size is the same result (B-04 compares it).
+  return blk(scopeId, seq, cat, estTokens, firstRequest, { tool: { name, kind, argsHash: sha1(`${name}:${target ?? ""}`), target }, toolUseId, label: target ?? name, hash: sha1(`${cat}:${name}:${target ?? ""}:${estTokens}`) });
 }
 
 /** A tool call at request r followed by its result (input to request r+1). */
@@ -320,7 +321,7 @@ export const scenarios = {
   // --- B-13 session too long ---
   "B-13-fires": ({ vendor }) => {
     const requests = [];
-    for (let i = 0; i < 20; i += 1) requests.push(req(i, 160_000, { minute: i * 3 }));
+    for (let i = 0; i < 20; i += 1) requests.push(req(i, 160_000, { minute: i * 4 })); // 76 active minutes: past the one-hour floor of the token branch
     return makeRun({ vendor, scopes: [scope("main", { requests, blocks: [blk("main", 0, "user", 300, 0)] })] });
   },
   "B-13-hours-fires": ({ vendor }) => {

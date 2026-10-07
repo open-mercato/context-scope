@@ -72,7 +72,8 @@ export function hookRunStats(hook, hookRuns) {
   for (const stats of matches) {
     runs += Number(stats.runs) || 0;
     const sizes = Array.isArray(stats.stdoutSizes) ? stats.stdoutSizes : [];
-    for (const size of sizes) stdoutTokens.push(stats.unit === "tokens" ? Math.round(Number(size) || 0) : estimateTokensFromBytes(size, "prose"));
+    // Hooks are a Claude Code feature, so legacy byte sizes get the Claude calibration (the index already reports tokens).
+    for (const size of sizes) stdoutTokens.push(stats.unit === "tokens" ? Math.round(Number(size) || 0) : estimateTokensFromBytes(size, "prose", { vendor: "claude" }));
   }
   return { runs, stdoutTokens };
 }

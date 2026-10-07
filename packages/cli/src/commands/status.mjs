@@ -56,7 +56,7 @@ async function instructionFiles({ repoRoot, home, sessionStats }) {
   const isFixture = typeof inventory.isFixturePath === "function" ? inventory.isFixturePath : () => false;
   return files
     .filter((file) => !isFixture(file.path))
-    .map((file) => ({ path: file.path, scope: file.scope, vendors: file.vendors ?? [], bytes: file.bytes ?? 0, estTokens: file.estTokens ?? 0, loadState: file.loadState ?? "discoverable" }));
+    .map((file) => ({ path: file.path, scope: file.scope, vendors: file.vendors ?? [], bytes: file.bytes ?? 0, estTokens: file.estTokens ?? 0, estBasis: file.estBasis, estTokensBy: file.estTokensBy, loadState: file.loadState ?? "discoverable" }));
 }
 
 /** The whole report as one object; every section is independent and degrades to an `error` string. */

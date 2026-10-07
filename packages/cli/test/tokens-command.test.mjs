@@ -7,6 +7,7 @@ import { renderTokens, tokensReport, TokensUsageError } from "../src/commands/to
 import { estimateTokens, tokenReport } from "../src/ir/estimate.mjs";
 import { createEstimator } from "../src/ir/estimate-core.mjs";
 import { CALIBRATION } from "../src/ir/estimate.mjs";
+import { buildSetupInventory } from "../src/setup/inventory.mjs";
 
 test("tokens: files, directories and stdin; binary files are skipped, totals add up", async () => {
   const base = await mkdtemp(path.join(os.tmpdir(), "contextscope-tokens-"));
@@ -40,4 +41,36 @@ test("the I/O-free estimator core gives the same numbers as estimate.mjs (browse
   const text = "const x = { a: [1, 2, 3] };\n".repeat(50) + "zażółć gęślą jaźń ✓";
   assert.deepEqual(core.tokenReport(text), tokenReport(text));
   assert.equal(core.tokenReport(text).bytes, Buffer.byteLength(text, "utf8"));
+});
+
+test("the setup inventory and `contextscope tokens` give the same claude/codex/neutral numbers for the same file", async () => {
+  const base = await mkdtemp(path.join(os.tmpdir(), "contextscope-tokens-inventory-"));
+  const home = path.join(base, "home");
+  try {
+    await mkdir(home, { recursive: true });
+    const prose = "# Conventions\n\nPrefer small modules. Explain why in comments, not what. ".repeat(80);
+    const codeish = "# API\n\n```ts\nexport const x = { a: [1, 2], b: () => fetch(\"/api\") };\n```\n".repeat(60);
+    await writeFile(path.join(base, "CLAUDE.md"), prose);
+    await writeFile(path.join(base, "AGENTS.md"), codeish);
+    const inventory = await buildSetupInventory({ repoRoot: base, home, sessionStats: { vendorsWithSessions: ["claude", "codex"], sessionCount: 0 }, capture: false });
+    const report = await tokensReport(["CLAUDE.md", "AGENTS.md"], { cwd: base });
+    for (const row of report.files) {
+      const file = inventory.instructionFiles.find((entry) => entry.path === row.path);
+      assert.ok(file, `${row.path} inventoried`);
+      assert.deepEqual(file.estTokensBy, row.tokens, `${row.path}: inventory and tokens agree per vendor`);
+      assert.equal(file.estKind, row.kind, `${row.path}: same prose/code detection`);
+    }
+    const claudeFile = inventory.instructionFiles.find((entry) => entry.path === "CLAUDE.md");
+    const codexFile = inventory.instructionFiles.find((entry) => entry.path === "AGENTS.md");
+    assert.equal(claudeFile.estBasis, "claude");
+    assert.equal(claudeFile.estTokens, report.files.find((row) => row.path === "CLAUDE.md").tokens.claude, "check's single number is the tokens column of the file's vendor");
+    assert.equal(codexFile.estBasis, "codex");
+    assert.equal(codexFile.estTokens, report.files.find((row) => row.path === "AGENTS.md").tokens.codex);
+    assert.equal(report.files.find((row) => row.path === "AGENTS.md").kind, "code", "auto detection applies to instruction files too");
+    // The budget line per vendor is the sum of that vendor's column over the chain.
+    assert.equal(inventory.startupBudget.claude.instructions.value, claudeFile.estTokensBy.claude);
+    assert.equal(inventory.startupBudget.codex.instructions.value, codexFile.estTokensBy.codex);
+  } finally {
+    await rm(base, { recursive: true, force: true });
+  }
 });

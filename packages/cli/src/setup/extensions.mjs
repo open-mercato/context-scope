@@ -2,7 +2,7 @@
  * Skills, agents, commands and auto-memory inventory (Claude Code layout).
  */
 import path from "node:path";
-import { estimateTokens } from "../ir/estimate.mjs";
+import { estimateByVendor, pickEstimate } from "../ir/estimate.mjs";
 import { parseFrontmatter, asStringList } from "./frontmatter.mjs";
 import { realpath } from "node:fs/promises";
 import { displayPath, isDirectory, isInside, listEntries, readTextSafe, statSafe, walk } from "./fs.mjs";
@@ -33,13 +33,19 @@ async function readSkill(abs, scope, { repoRoot, home, sessionStats }) {
   const description = descriptionOf(fm.data);
   const declaredName = typeof fm.data?.name === "string" ? fm.data.name.trim() : "";
   const nameMismatch = Boolean(declaredName) && declaredName !== dirName;
+  // What the startup prompt carries is the description (estTokensBy / estTokens); the body loads on
+  // invocation (bodyEstTokensBy / bodyEstTokens). Both per vendor, settled once the vendor set is final.
+  const body = estimateByVendor(fm.body, { kind: "prose" });
+  const { estKind: _descKind, ...descriptionEstimate } = estimateByVendor(description, { kind: "prose" });
   const skill = {
     name: declaredName || dirName,
     path: displayPath(abs, { repoRoot, home }),
     scope,
     hasDescription: description.length > 0,
     descriptionChars: description.length,
-    bodyEstTokens: estimateTokens(fm.body, "prose"),
+    bodyEstTokens: body.estTokens,
+    bodyEstTokensBy: body.estTokensBy,
+    ...descriptionEstimate,
     frontmatterValid: fm.ok && fm.present && !nameMismatch,
     invocations30d: lookup(sessionStats?.skillInvocations, declaredName || dirName) || lookup(sessionStats?.skillInvocations, dirName),
   };
@@ -113,7 +119,15 @@ export async function collectSkills(ctx) {
     const skill = await readSkill(abs, "plugin", ctx);
     if (skill) skills.push({ ...skill, vendors: ["claude"], aliases: [] });
   }
+  for (const skill of skills) settleEstimate(skill);
   return skills;
+}
+
+/** `estTokens` / `estBasis` for the vendors that see the row (the description and, for skills, the body). */
+function settleEstimate(row) {
+  Object.assign(row, pickEstimate(row.estTokensBy, row.vendors));
+  if (row.bodyEstTokensBy) row.bodyEstTokens = pickEstimate(row.bodyEstTokensBy, row.vendors).estTokens;
+  return row;
 }
 
 async function readAgent(abs, scope, { repoRoot, home, sessionStats }) {
@@ -122,11 +136,15 @@ async function readAgent(abs, scope, { repoRoot, home, sessionStats }) {
   const fm = parseFrontmatter(read.text);
   const fileName = path.basename(abs, ".md");
   const name = typeof fm.data?.name === "string" && fm.data.name.trim() ? fm.data.name.trim() : fileName;
+  const description = descriptionOf(fm.data);
+  const { estKind: _descKind, ...descriptionEstimate } = estimateByVendor(description, { vendors: ["claude"], kind: "prose" });
   const agent = {
     name,
     path: displayPath(abs, { repoRoot, home }),
     scope,
-    descriptionChars: descriptionOf(fm.data).length,
+    descriptionChars: description.length,
+    // Agents are a Claude Code feature: the description enters every Claude request.
+    ...descriptionEstimate,
     runs30d: lookup(sessionStats?.agentRuns, name) || lookup(sessionStats?.agentRuns, fileName),
   };
   if (typeof fm.data?.model === "string") agent.model = fm.data.model;

@@ -1,8 +1,8 @@
 /**
  * The estimator without I/O: the same arithmetic as estimate.mjs over a
  * calibration object passed in, so the browser (the Tokens screen) and the CLI
- * (`contextscope tokens`, the adapters) compute identical numbers.
- * estimate.mjs binds it to src/ir/calibration.json.
+ * (`contextscope tokens`, the adapters, the setup inventory) compute identical
+ * numbers. estimate.mjs binds it to src/ir/calibration.json.
  */
 
 /** UTF-8 byte length; works in Node and in the browser. */
@@ -20,8 +20,40 @@ export function detectKind(text) {
   return symbols / sample.length > 0.03 ? "code" : "prose";
 }
 
+/** File extensions whose contents a model receives as a converted document, not as text. */
+export const BINARY_EXTENSIONS = new Set(["pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff", "tif", "heic", "docx", "doc", "xlsx", "xls", "pptx", "ppt", "zip", "gz", "tar", "woff", "woff2", "ttf", "otf", "mp3", "mp4", "mov", "wav"]);
+
+const BASE64_RUN = /[A-Za-z0-9+/]{400,}={0,2}/;
+const BINARY_NOISE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F�]/g;
+
+/**
+ * Whether a tool result is a binary document. Deliberately conservative: BOTH
+ * the target's extension (`Read foo.pdf`, `cat logo.png`) AND the result text
+ * must agree, because transcripts never say what a tool returned: a base64
+ * run inside a `.pdf` read is the document, the same run inside a `.ts` read
+ * is a data URI the text ratio handles fine. The text test accepts the two
+ * shapes seen in the wild: a base64 payload (Claude's `document` content
+ * part) or raw bytes decoded as UTF-8 (a `cat` of the file: control
+ * characters and U+FFFD replacement characters).
+ */
+export function detectBinary(text, { target } = {}) {
+  if (typeof text !== "string" || text.length < 400 || typeof target !== "string") return false;
+  const ext = target.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1];
+  if (!ext || !BINARY_EXTENSIONS.has(ext)) return false;
+  const sample = text.slice(0, 20_000);
+  if (BASE64_RUN.test(sample)) return true;
+  const noise = (sample.match(BINARY_NOISE) || []).length;
+  return noise / sample.length > 0.02;
+}
+
+/** The `kind` of a block: `binary` when the target and the content agree, else prose/code. */
+export function detectBlockKind(text, { target } = {}) {
+  return detectBinary(text, { target }) ? "binary" : detectKind(text);
+}
+
 export function createEstimator(calibration) {
   const neutral = calibration.neutral.bytesPerToken;
+  const binary = calibration.binary?.bytesPerToken;
   const vendors = calibration.vendors;
   const envelopeSets = new Map(Object.entries(vendors).map(([vendor, cal]) => [vendor, new Set(cal.envelopeCategories ?? [])]));
 
@@ -41,7 +73,10 @@ export function createEstimator(calibration) {
     if (!bytes) return 0;
     const cal = calibrationFor(vendor);
     const ratios = cal?.bytesPerToken ?? neutral;
-    const base = Math.ceil(bytes / (kind === "code" ? ratios.code : ratios.prose));
+    // A binary document is converted by the vendor before tokenizing, so the text ratios do not apply;
+    // the envelope and category scale are per message, not per content, and still do.
+    const ratio = kind === "binary" && binary ? binary : kind === "code" ? ratios.code : ratios.prose;
+    const base = Math.ceil(bytes / ratio);
     if (!cal) return base;
     let tokens = base;
     if (cal.categoryScale) tokens = Math.max(1, Math.round(base * categoryScaleFor(cal, category)));
@@ -70,5 +105,47 @@ export function createEstimator(calibration) {
     };
   }
 
-  return { calibrationFor, estimateTokensFromBytes, tokenReport };
+  /**
+   * The basis a single number for a file rests on: the file's vendor when it
+   * has exactly one calibrated vendor, the larger of its calibrated vendors
+   * when it has several (conservative: a budget that passes on the larger
+   * figure passes on both), `neutral` when none of its vendors is calibrated
+   * (gemini, or no vendor at all).
+   */
+  function basisFor(vendorList) {
+    const calibrated = [...new Set(Array.isArray(vendorList) ? vendorList : [])].filter((vendor) => Boolean(calibrationFor(vendor))).sort();
+    if (!calibrated.length) return "neutral";
+    if (calibrated.length === 1) return calibrated[0];
+    return `max(${calibrated.join(",")})`;
+  }
+
+  /** Picks `estTokens` + `estBasis` out of a per-vendor table for the vendors that load the file. */
+  function pickEstimate(estTokensBy, vendorList) {
+    const estBasis = basisFor(vendorList);
+    if (estBasis === "neutral") return { estTokens: estTokensBy.neutral ?? 0, estBasis };
+    if (!estBasis.startsWith("max(")) return { estTokens: estTokensBy[estBasis] ?? estTokensBy.neutral ?? 0, estBasis };
+    const vendorsIn = estBasis.slice(4, -1).split(",");
+    return { estTokens: Math.max(...vendorsIn.map((vendor) => estTokensBy[vendor] ?? 0)), estBasis };
+  }
+
+  /**
+   * ONE estimate per inventoried file (instruction files, skills, agents):
+   * the same `tokenReport` arithmetic as `contextscope tokens` (so the two
+   * agree to the token), kept per vendor in `estTokensBy`, plus the single
+   * backwards-compatible `estTokens` chosen by `pickEstimate`.
+   */
+  function estimateByVendor(text, { vendors: vendorList = [], kind = "auto" } = {}) {
+    const report = tokenReport(text, { kind });
+    return { estKind: report.kind, estTokensBy: report.tokens, ...pickEstimate(report.tokens, vendorList) };
+  }
+
+  /** The per-vendor figure of a row produced by `estimateByVendor` (falls back to its single number). */
+  function estTokensFor(row, vendor) {
+    if (!row) return 0;
+    const basis = basisFor([vendor]);
+    const value = row.estTokensBy?.[basis];
+    return typeof value === "number" ? value : (row.estTokens ?? 0);
+  }
+
+  return { calibrationFor, estimateTokensFromBytes, tokenReport, basisFor, pickEstimate, estimateByVendor, estTokensFor };
 }

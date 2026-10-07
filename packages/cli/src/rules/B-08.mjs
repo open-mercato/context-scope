@@ -47,7 +47,12 @@ export default {
         fix: platformFix(run, {
           claude: { summary: "Compact deliberately with a focus before the auto trigger, or split the task.", snippet: "/compact Keep: current task, decisions made, files changed, next steps. Drop: tool output and exploration." },
           codex: { summary: "Compact deliberately before the auto trigger, or split the task into a new thread.", snippet: "/compact\n# or start a new thread with a short handoff note of decisions and next steps" },
-        }),
+          // A child cannot open a thread; its task is sized by whoever spawned it.
+          subagent: {
+            claude: { summary: "Give the agent a narrower task and keep tool output out of its context; set it in the agent definition or the Agent prompt.", snippet: "- Read files in ranges (Read offset/limit); cap search and shell output.\n- Keep tool output out of the handoff; return paths and decisions only." },
+            codex: { summary: "Give the child thread a narrower task and keep tool output out of its context; set it in the spawn prompt.", snippet: "spawn_agent prompt: \"<task, one deliverable>. Read files in ranges (sed -n 'A,Bp'); pipe shell output through head -c 8000. Return paths and decisions only.\"" },
+          },
+        }, { scope }),
       }));
     }
     return findings;

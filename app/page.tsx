@@ -2,7 +2,7 @@
 const DEMO_HREF = "/app/index.html?demo=1#/";
 const OPEN_HREF = "/app/index.html?demo=1#/open";
 const COMMAND = "npx contextscope";
-// Repository and npm links are added when they exist (docs/publishing.md); no placeholder links.
+// The npm link is added once the package is published (docs/publishing.md); no placeholder links.
 
 const QUESTIONS = [
   {
@@ -71,7 +71,7 @@ export default function Landing() {
         <div className="command" role="group" aria-label="The one command">
           <span className="prompt" aria-hidden="true">$</span>
           <code>{COMMAND}</code>
-          <span className="command-note">npm package <code>contextscope</code> 0.10, publishing now; indexes the sessions of the current repository and opens the UI on 127.0.0.1</span>
+          <span className="command-note">npm package <code>contextscope</code> 0.11, publishing now; indexes the sessions of the current repository and opens the UI on 127.0.0.1</span>
         </div>
         <div className="cta-row">
           <a className="btn btn-primary" href={DEMO_HREF}>Try the demo</a>
@@ -134,8 +134,8 @@ export default function Landing() {
         <p className="kicker">How it works</p>
         <ol className="steps">
           <li><span className="step-n">1</span><div><h3>Run it in a repository</h3><p><code>{COMMAND}</code> discovers the vendors present, asks once which directories it may read, indexes the changed session files in seconds, and opens the UI; <code>contextscope scan</code> prints the same summary in the terminal.</p></div></li>
-          <li><span className="step-n">2</span><div><h3>Read the three answers</h3><p>The UI opens on a loopback port with a per-launch token: overview for the repository, one screen per session, findings with fixes, and the setup inventory with its startup budget.</p></div></li>
-          <li><span className="step-n">3</span><div><h3>Fix one thing, then re-scan</h3><p>Copy the fix into <code>CLAUDE.md</code>, <code>AGENTS.md</code> or the agent definition it names; the next sessions show whether the finding went away. Export a session to put the evidence in a PR.</p></div></li>
+          <li><span className="step-n">2</span><div><h3>Read the three answers</h3><p>The UI opens on a loopback port with a per-launch token: overview for the repository, one screen per session, findings with suggested fixes, and the setup inventory with its startup budget.</p></div></li>
+          <li><span className="step-n">3</span><div><h3>Fix one thing, then re-scan</h3><p>Treat the fix as a hypothesis: copy it into <code>CLAUDE.md</code>, <code>AGENTS.md</code> or the agent definition it names, and let the next sessions show whether the finding went away. Export a session to put the evidence in a PR.</p></div></li>
         </ol>
         <div className="cta-row">
           <a className="btn btn-primary" href={DEMO_HREF}>Try the demo</a>
@@ -145,7 +145,7 @@ export default function Landing() {
 
       <footer className="site-footer">
         <div className="footer-links">
-          <span><span className="soon">coming soon</span> GitHub repository</span>
+          <span><a href="https://github.com/open-mercato/context-scope" rel="noreferrer">GitHub repository</a></span>
           <span><span className="soon">coming soon</span> npm: <code>contextscope</code></span>
           <span><a href={DEMO_HREF}>Demo</a></span>
           <span><a href={OPEN_HREF}>Open an export</a></span>

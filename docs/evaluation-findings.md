@@ -4,6 +4,8 @@ Date: 2026-09-29 · ContextScope 0.11.0 (branch `contextscope-cycle3`, Claude ad
 Per-repository reports: [Repo A](evaluation/repo-a.md) · [Repo B](evaluation/repo-b.md) · [Repo C](evaluation/repo-c.md) · [Repo D](evaluation/repo-d.md) · [Repo E](evaluation/repo-e.md).
 Where each rule's rationale comes from: [sources.md](sources.md).
 
+> **Status 2026-10-07:** fix-list items 1, 3, 4 and 6 landed (B-11, B-04, B-13, B-16, S-05, scope-aware fixes, one estimate per file). The numbers below are from before those changes; re-run the method on the same five repositories before the first publish.
+
 ## Verdict
 
 **The measurements are mostly right, but the recommendations are mostly not ready to follow unreviewed.**

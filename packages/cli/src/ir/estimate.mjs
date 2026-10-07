@@ -9,13 +9,20 @@
  *
  *   claude: tokens = ceil(bytes / bytesPerToken[kind]) + envelope(category)
  *   codex:  tokens = max(1, round(ceil(bytes / bytesPerToken[kind]) * categoryScale(category)))
+ *   binary: kind "binary" (a PDF / image / office document read as base64 or
+ *           raw bytes) swaps the vendor ratio for `binary.bytesPerToken`.
+ *
+ * Inventoried files (instruction files, skills, agents) go through
+ * `estimateByVendor`: one `estTokensBy { claude, codex, neutral }` table per
+ * file, the same arithmetic as `contextscope tokens`, and one backwards-
+ * compatible `estTokens` whose `estBasis` names the vendor it rests on.
  *
  * The index keys its change detection on ESTIMATOR_VERSION and
  * CALIBRATION_VERSION: bump CALIBRATION_VERSION (in calibration.json) whenever
  * a constant changes; test/ir-calibration.test.mjs pins the file hash.
  */
 import fs from "node:fs";
-import { createEstimator, detectKind } from "./estimate-core.mjs";
+import { BINARY_EXTENSIONS, createEstimator, detectBinary, detectBlockKind, detectKind } from "./estimate-core.mjs";
 
 export const CALIBRATION = JSON.parse(fs.readFileSync(new URL("./calibration.json", import.meta.url), "utf8"));
 export const ESTIMATOR_VERSION = CALIBRATION.estimatorVersion;
@@ -40,6 +47,15 @@ export const estimateTokensFromBytes = core.estimateTokensFromBytes;
 /** Token estimate of standalone text per vendor and neutral (`contextscope tokens`, the Tokens screen). */
 export const tokenReport = core.tokenReport;
 
+/** One estimate per inventoried file: `{ kind, estTokensBy, estTokens, estBasis }` (see estimate-core.mjs). */
+export const estimateByVendor = core.estimateByVendor;
+/** `estTokens` + `estBasis` for a per-vendor table and the vendors that load the file. */
+export const pickEstimate = core.pickEstimate;
+/** "claude" | "codex" | "neutral" | "max(claude,codex)" for a vendor list. */
+export const basisFor = core.basisFor;
+/** The figure of an inventoried row for one vendor (that vendor's calibration, neutral for uncalibrated vendors). */
+export const estTokensFor = core.estTokensFor;
+
 /** Tokens charged for one image part (vendors do not report per-image tokens). */
 export function imageTokensFor(vendor) {
   return calibrationFor(vendor)?.imageTokens ?? 1500;
@@ -58,7 +74,7 @@ export function systemBaselineFor(vendor, { hasBaseInstructionsBlock = false } =
   return cal.systemBaselineTokens ?? 0;
 }
 
-export { detectKind };
+export { BINARY_EXTENSIONS, detectBinary, detectBlockKind, detectKind };
 
 export function sizeOfJson(value) {
   try { return byteLength(JSON.stringify(value)); } catch { return 0; }

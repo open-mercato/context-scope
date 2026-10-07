@@ -269,6 +269,7 @@ code.cell-sub { background: none; padding: 0; }
 .fix-path { background: var(--surface); }
 .fix-snippet { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; white-space: pre; }
 .fix-snippet code { background: none; padding: 0; }
+.fix-note { margin: 0; font-size: 11.5px; color: var(--muted); }
 .finding-actions { display: flex; align-items: center; gap: 8px; }
 .finding-affected { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .finding-group { display: flex; flex-direction: column; gap: 12px; }

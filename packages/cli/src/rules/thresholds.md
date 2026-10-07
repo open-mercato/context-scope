@@ -7,7 +7,7 @@ Defaults for B-01..B-17 and the habit rules H-01..H-07. Override any key in `~/.
 - `repeatedFatResultTokens` (3000): B-02 counts tool results above this size, per tool kind.
 - `repeatedFatResultCount` (5): B-02 fires when one tool kind produces at least this many results above `repeatedFatResultTokens` in a session.
 - `hugeFileReadTokens` (20000): B-03 fires for a single file-read result above this.
-- `repeatedIdenticalCalls` (3): B-04 fires when the same tool with an identical argument hash runs at least this many times in one scope.
+- `repeatedIdenticalCalls` (3): B-04 fires when the same tool with an identical argument hash runs at least this many times in one scope *and the results were identical too* (block `hash`, the sha1 of the result content). A command repeated with results that differ is a re-check (polling, a build after edits), not a cache miss; calls without a logged result are not judged. Tools that re-sample state by name (`/screenshot|wait|sleep|poll|reload|navigate|status|monitor/i`) and shell calls whose target or label says sleep/wait/poll/watch/until are skipped outright.
 - `fatHandoffTokens` (4000): B-05 fires when a subagent handoff exceeds this many tokens.
 - `fatHandoffShare` (0.4): B-05 also fires when the handoff exceeds this share of the child's own peak context.
 - `subagentRereadFiles` (3): B-06 fires when a child reads at least this many files the parent had already read before launching it.
@@ -19,16 +19,16 @@ Defaults for B-01..B-17 and the habit rules H-01..H-07. Override any key in `~/.
 - `cacheChurnRequestShare` (0.3): B-09 fires when at least this share of eligible requests churn with little new content.
 - `cacheChurnMinRequest` (5): B-09 ignores requests with an index below this (the prefix is still being built).
 - `systemShareHigh` (0.25): B-10 fires when the hidden base `H` of the first request exceeds this share of the window.
-- `turnOverheadUserTokens` (50): B-11 treats a request as a tiny follow-up when its new user content is below this.
+- `turnOverheadUserTokens` (50): B-11 treats a request as a tiny follow-up when it *starts a human turn* (its `turn` differs from the previous request's and its new blocks include a `user` block) with less than this much new user content. Tool-loop steps (tool_use → tool_result → next request) and deliveries without a user block (handoffs, attachments) never count: they are the agent's work, not the user's habit.
 - `turnOverheadTotal` (100000): B-11 only counts tiny follow-ups whose request total exceeds this.
-- `turnOverheadRequests` (10): B-11 fires after this many tiny-but-expensive requests.
+- `turnOverheadRequests` (10): B-11 fires after this many tiny-but-expensive turn starts.
 - `toolResultsDominateShare` (0.6): B-12 fires when `tool_result.*` categories exceed this share of occupancy at the session peak.
-- `sessionTooLongTokens` (3000000): B-13 fires when processed input tokens exceed this.
+- `sessionTooLongTokens` (3000000): B-13 fires when processed input tokens exceed this *and* the session has at least one active hour. Processed input grows with every request, so a busy 20-minute session can cross the token bar on its own; the rule is about length.
 - `sessionTooLongHours` (4): B-13 also fires when active time exceeds this many hours and the session compacted at least twice.
 - `searchFloodTokens` (4000): B-14 fires for a search-style result (Grep/Glob/rg/find) above this.
 - `parallelDuplicateFiles` (3): B-15 fires when two sibling subagents read at least this many identical files or run this many identical commands.
 - `toolArgsDominateShare` (0.35): B-17 fires when the `tool_call` category (Write/Edit/apply_patch payloads, commands with inlined content) is at least this share of occupancy at the session peak.
-- `unloggedShareHigh` (0.15): B-16 fires when a scope's `unloggedShare` (input the model saw that is not in the transcript, reconciliation v2) reaches this, or whenever the scope has a non-empty `baseSteps` list. Scopes the IR marks `transcriptIncomplete` (Codex legacy `history_mode` children) are skipped.
+- `unloggedShareHigh` (0.15): B-16 fires when a scope's `unloggedShare` (input the model saw that is not in the transcript, reconciliation v2) reaches this, or when `baseSteps` holds a positive step of at least 5,000 tokens (constant in the rule). Negative steps are hidden mass leaving the window (a compaction, a swapped instruction file): they are never evidence, never counted and never called an injection. Scopes the IR marks `transcriptIncomplete` (Codex legacy `history_mode` children) are skipped. The non-resumed fix names the request where the hidden input grew and points at `contextscope hooks install --scope user` (runtime evidence of what was loaded) rather than guessing at MCP servers.
 
 ## Habit rules (H-01..H-07, ADR-003 section 2)
 
@@ -65,3 +65,7 @@ Base severities against ADR-001 (`high` = likely to cause task failure or compac
 B-10 `system-share-high` counts `composition.system + composition.instructions` of the first request only; `unlogged` mass (resumed history, hidden injections) belongs to B-16 and never makes a setup finding.
 
 Recurrence across sessions is not computed by the engine; the API layer fills `sessions` at read time from the manifest and `rankFindings` uses it as the third key.
+
+## Scope-aware fixes (util.mjs `platformFix(run, variants, { scope })`)
+
+A finding whose scope is a child (a Claude subagent scope, or any scope of a Codex child thread, `run.kind === "subagent-run"`) never tells the reader to delegate, `/clear`, `/new` or start a fresh session: a child cannot do any of that. With `{ scope }` the helper picks `variants.subagent` (keyed by vendor) when the rule provides one, otherwise `childScopeFix`: fix the agent definition (`.claude/agents/<type>.md`, or the Agent prompt for a built-in type; the Codex spawn prompt) so the child keeps tool output out of the handoff and returns paths and decisions only. Applied in B-01 (the "delegate" fallback; ranged-read and cap-output fixes stay), B-04, B-07, B-08, B-11, B-12, B-13 and B-16. File paths in fixes fall back to the block `label` when `tool.target` is missing (`toolTarget`).

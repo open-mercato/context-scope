@@ -4,8 +4,10 @@ ContextScope is a local context-window profiler for coding-agent sessions. It
 reads the session transcripts Claude Code and Codex already keep on your
 machine, reconstructs what occupied the model's context window request by
 request (system prompt, instruction files, tool results, subagent handoffs,
-compactions), and turns that into findings with a concrete fix: the file to
-edit and the line to add.
+compactions), and turns that into findings with a suggested fix: the file to
+edit and the line to add. The measurements are exact or reconciled to the
+vendor's exact totals; the fixes are hypotheses, to be tested against the next
+sessions (our own evaluation: `docs/evaluation-findings.md`).
 
 **What leaves the machine: nothing.** There is no account, no model call, no
 upload, no analytics. The only file that ever travels is an export you write
@@ -515,9 +517,12 @@ contextscope check --user-config                     # include ~/.claude/CLAUDE.
 contextscope check --json
 ```
 
-Output is one row per vendor startup budget (marked "estimated from disk":
-without sessions the budget is computed from file sizes), one row per
-violation (instruction file over `instructionFileTokens`, missing reference),
+Output is one row per vendor startup budget (marked e.g. "claude-calibrated,
+from disk": without sessions the budget is computed from file sizes with that
+vendor's bytes-per-token calibration, the number `contextscope tokens` prints
+in the same vendor's column), one row per violation (instruction file over
+`instructionFileTokens` on the file's own basis: its vendor's figure, or the
+larger of two vendors' when both load it; missing reference),
 then the rule findings with their severity and vendor, and a summary line. One
 fact reported by several rules is folded into one row (`folded` in `--json`).
 Exit codes: `0` pass, `1` violations or findings at or above `--fail-on`, `2`
@@ -574,7 +579,13 @@ GitHub Actions (this repository runs the same gate on itself in
   estimator; the calibration constants and the measured error live in
   `src/ir/calibration.json`) and are reconciled against the observed totals
   request by request. The session screen shows the estimator error of the
-  scope on screen.
+  scope on screen. Instruction files, skills and agents carry one estimate
+  per vendor (`estTokensBy`, the same arithmetic as `contextscope tokens`);
+  the single `estTokens` is the file's own vendor's figure, or the larger of
+  two vendors' when both load it, and `estBasis` names which (the neutral
+  ratio applies only to vendors without a calibration). A tool result that
+  reads a PDF, image or office document is sized with a separate `binary`
+  ratio fitted on a single observation, so treat those blocks as rough.
 - Input the model saw that is not in the transcript (a resumed history, hidden
   injections) is reported as `unlogged`, never as system prompt.
 - Codex rollouts with `history_mode: legacy` children may have no logged input

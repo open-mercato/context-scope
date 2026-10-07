@@ -184,7 +184,7 @@ export interface Block {
   category: Category;
   bytes: number;                       // observed.artifact
   estTokens: number;                   // estimated.local
-  kind?: "prose" | "code";
+  kind?: "prose" | "code" | "binary";  // binary = a PDF / image / office document read (own bytes-per-token ratio, calibration.json `binary`)
   tool?: { name: string; kind: ToolKind; argsHash: string; target?: string; isError?: boolean; server?: string; partial?: boolean; truncated?: boolean; originalTokens?: number }; // partial = a ranged/limited read, not the whole file
   toolUseId?: string;
   agentId?: string;
@@ -282,12 +282,24 @@ export interface Finding {
   scopeId?: string;
 }
 
+/**
+ * What a single token figure rests on: the file's vendor calibration, the
+ * larger of two vendors' figures when both load the file (conservative), or
+ * the neutral ratio when no vendor of the file is calibrated (gemini).
+ */
+export type EstimateBasis = "claude" | "codex" | "neutral" | "max(claude,codex)";
+/** One estimate per file: the same arithmetic as `contextscope tokens`, per vendor. */
+export interface EstimateByVendor { claude: number; codex: number; neutral: number }
+
 export interface InstructionFile {
   path: string;                        // repo-relative, or ~-relative for user scope
   scope: "user" | "project" | "local" | "nested" | "rules" | "override";
   vendors: Vendor[];
   bytes: number;
-  estTokens: number;
+  estTokens: number;                   // estimated.local; = estTokensBy[estBasis] (max over the vendors for "max(...)")
+  estTokensBy?: EstimateByVendor;      // the figure each vendor's budget line uses (estTokensBy[vendor])
+  estBasis?: EstimateBasis;
+  estKind?: "prose" | "code";          // detected kind the ratios were picked for
   precedence: number;
   mtime: string;
   loadState: "discoverable" | "expected.load" | "observed.loaded";
@@ -300,14 +312,14 @@ export interface SetupInventory {
   repo: { name: string; root: "cwd"; git: boolean };
   vendorsDetected: Vendor[];
   instructionFiles: InstructionFile[];
-  skills: Array<{ name: string; path: string; scope: "user" | "project" | "plugin"; hasDescription: boolean; descriptionChars: number; bodyEstTokens: number; frontmatterValid: boolean; invocations30d: number; vendors?: Vendor[]; aliases?: string[] }>; // path = real location; aliases = symlinks to it (e.g. .claude/skills/x -> .agents/skills/x)
-  agents: Array<{ name: string; path: string; scope: "user" | "project"; model?: string; tools?: string[]; descriptionChars: number; runs30d: number }>;
+  skills: Array<{ name: string; path: string; scope: "user" | "project" | "plugin"; hasDescription: boolean; descriptionChars: number; bodyEstTokens: number; frontmatterValid: boolean; invocations30d: number; vendors?: Vendor[]; aliases?: string[]; estTokens?: number; estTokensBy?: EstimateByVendor; estBasis?: EstimateBasis; bodyEstTokensBy?: EstimateByVendor }>; // path = real location; aliases = symlinks to it (e.g. .claude/skills/x -> .agents/skills/x); estTokens* = the description (what the startup prompt carries), bodyEstTokens* = the body (loaded on invocation)
+  agents: Array<{ name: string; path: string; scope: "user" | "project"; model?: string; tools?: string[]; descriptionChars: number; runs30d: number; estTokens?: number; estTokensBy?: EstimateByVendor; estBasis?: EstimateBasis }>; // estTokens* = the description, claude-calibrated (agents are a Claude Code feature)
   hooks: Array<{ event: string; matcher?: string; command: string; scope: "user" | "project" | "local"; runs30d: number; stdoutP50: number; stdoutP95: number }>;
   mcpServers: Array<{ name: string; scope: "user" | "project" | "local"; transport?: string; toolsObserved: string[]; invocations30d: number }>;
   commands: Array<{ name: string; path: string }>;
   memory: { present: boolean; bytes: number; files: number; indexBytes: number };
   settings: Array<{ path: string; scope: "user" | "project" | "local"; keys: string[] }>;
-  startupBudget: Partial<Record<Vendor, { instructions: Measured; skills: Measured; agents: Measured; mcpTools: Measured; total: Measured }>>;
+  startupBudget: Partial<Record<Vendor, { instructions: Measured & { basis?: EstimateBasis }; skills: Measured & { basis?: EstimateBasis }; agents: Measured & { basis?: EstimateBasis }; mcpTools: Measured; total: Measured & { basis?: EstimateBasis } }>>; // each vendor's line is that vendor's calibrated figure (estTokensBy[vendor]); mcpTools is a per-tool working assumption
   excluded?: Array<{ path: string; reason: "fixture" }>; // instruction/skill/agent files found under test fixture directories: listed, never counted (chain, budget, trends, S rules)
 }
 
