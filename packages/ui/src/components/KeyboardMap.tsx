@@ -3,6 +3,7 @@ import { keyboardMapOpen } from "../store.ts";
 import { useFocusTrap } from "../hooks.ts";
 
 const ROWS: Array<[string[], string]> = [
+  [["⌘ K", "Ctrl K"], "Jump to a session, screen or action"],
   [["g o", "g s", "g f", "g u"], "Go to Overview / Setup / Findings / current Session"],
   [["j", "k"], "Next / previous request (session) or row (first table on the screen)"],
   [["↑", "↓", "Home", "End"], "Move in a focused table; Space expands a group, ← / → collapse or expand"],

@@ -58,8 +58,15 @@ export function useFocusTrap(ref: { current: HTMLElement | null }, open: boolean
     const root = ref.current;
     if (!root) return;
     const opener = document.activeElement as HTMLElement | null;
+    // Every top-level sibling of the dialog goes inert; the dialog's own branch must stay interactive
+    // (making `#app` itself inert would silence the dialog too, since it renders inside the app root).
     const app = document.getElementById("app");
-    app?.setAttribute("inert", "");
+    const made: Element[] = [];
+    for (const child of Array.from(app?.children ?? [])) {
+      if (child.contains(root) || child.hasAttribute("inert")) continue;
+      child.setAttribute("inert", "");
+      made.push(child);
+    }
     const focusables = () => Array.from(root.querySelectorAll<HTMLElement>("a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])"));
     const target = initial?.current ?? focusables()[0];
     target?.focus();
@@ -75,7 +82,7 @@ export function useFocusTrap(ref: { current: HTMLElement | null }, open: boolean
     root.addEventListener("keydown", onKey);
     return () => {
       root.removeEventListener("keydown", onKey);
-      app?.removeAttribute("inert");
+      for (const el of made) el.removeAttribute("inert");
       if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
     };
   }, [open, ref, initial]);

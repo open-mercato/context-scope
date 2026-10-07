@@ -16,6 +16,8 @@ export interface FindingCardProps {
   compact?: boolean;
   /** Overrides the "Fix (<platform>)" label, e.g. when the majority vendor of the recurrence differs from the head finding's. */
   platformLabel?: string;
+  /** Overview: title, fix line and actions only; the why, sources, evidence and snippet live on the Findings screen. */
+  summary?: boolean;
 }
 
 /** Where "Show evidence" goes for a given evidence row; undefined when nothing to open. */
@@ -148,7 +150,7 @@ export function EvidenceList({ finding, limit }: { finding: Finding; limit?: num
 }
 
 /** The single finding card from ADR-001 section 2.5, used for the "one change to make first" slot. */
-export function FindingCard({ finding, headline, subline, highlight, compact, platformLabel }: FindingCardProps) {
+export function FindingCard({ finding, headline, subline, highlight, compact, platformLabel, summary }: FindingCardProps) {
   const primary = primaryHref(finding);
   const platform = platformLabel ?? (finding.fix.platform === "both" ? "claude and codex" : finding.fix.platform);
   const sessions = findingSessions(finding);
@@ -157,6 +159,31 @@ export function FindingCard({ finding, headline, subline, highlight, compact, pl
   // An empty evidence list is rendered as a hint, never as a bare "Evidence:" label (ADR-004 §1).
   const hasEvidence = evidence.length > 0 || (finding.thresholdKeys?.length ?? 0) > 0 || !!primary;
 
+  if (summary) {
+    return (
+      <article class={`finding finding-summary finding-${finding.severity} ${highlight ? "finding-highlight" : ""}`} data-finding={finding.id} tabIndex={0} aria-label={`${finding.severity} finding: ${finding.title}`}>
+        <div class="finding-summary-main">
+          <header class="finding-head">
+            <Badge severity={finding.severity} />
+            <h3 class="finding-title">{finding.title}</h3>
+            <span class="finding-meta">
+              {sessions > 1 ? <span title="Sessions in which the same rule fired">{plural(sessions, "session")}</span> : null}
+              {finding.tokensAffected ? <span title={`Estimated tokens affected: ${formatNumber(finding.tokensAffected)}`}> · ~{formatTokens(finding.tokensAffected)} tok</span> : null}
+              <span class="finding-rule" title="Rule id">{finding.ruleId}</span>
+            </span>
+          </header>
+          <p class="finding-summary-fix" title={finding.whyItMatters}>
+            <span class="finding-k">Fix ({platform}):</span> {finding.fix.summary}
+            {finding.fix.path ? <> → <code class="fix-path">{finding.fix.path}</code></> : null}
+          </p>
+        </div>
+        <footer class="finding-actions finding-summary-actions">
+          <button type="button" class="btn btn-primary" data-copy-fix onClick={() => copyText(fixText(finding), "Fix copied to clipboard")}>Copy fix</button>
+          <a class="btn" href={hrefs.findings()} title="The why, the sources, the evidence and the full fix text">Details</a>
+        </footer>
+      </article>
+    );
+  }
   return (
     <article class={`finding finding-${finding.severity} ${highlight ? "finding-highlight" : ""} ${compact ? "finding-compact" : ""}`} data-finding={finding.id} tabIndex={0} aria-label={`${finding.severity} finding: ${finding.title}`}>
       {headline ? <div class="finding-headline">{headline}{subline ? <span class="muted"> · {subline}</span> : null}</div> : null}

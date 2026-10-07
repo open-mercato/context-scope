@@ -138,7 +138,14 @@ button, input { font: inherit; color: inherit; }
 
 /* ---------- badges ---------- */
 .badge { display: inline-flex; align-items: center; padding: 1px 6px; border-radius: 999px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; line-height: 1.5; border: 1px solid transparent; vertical-align: middle; cursor: default; }
-.badge-prov { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0; }
+/* Provenance: a coloured dot plus one quiet word. Tone colours stay on the dot so a table of twenty badges reads as text, not as twenty pills. */
+.badge-prov { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0; font-size: 10px; padding: 0 5px 0 4px; gap: 4px; background: transparent; border-color: var(--border); color: var(--muted); }
+.badge-prov .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--low); flex: none; }
+.badge-prov.badge-good .badge-dot { background: var(--good); }
+.badge-prov.badge-info .badge-dot { background: var(--info); }
+.badge-prov.badge-accent .badge-dot { background: var(--accent); }
+.badge-prov.badge-warn .badge-dot { background: var(--medium); }
+.badge-prov:hover { color: var(--text); border-color: var(--border-strong); }
 .badge-neutral { background: var(--low-bg); color: var(--low); }
 .badge-good { background: var(--good-bg); color: var(--good); }
 .badge-info { background: var(--info-bg); color: var(--info); }
@@ -438,7 +445,6 @@ kbd { display: inline-block; padding: 0 6px; border: 1px solid var(--border-stro
 .cs-lane-text > a { flex: none; }
 .cs-lane-text strong { font-weight: 600; }
 .cs-lane-text .cs-lane-handoff { font-variant-numeric: tabular-nums; padding-left: 6px; border-left: 1px solid var(--border); }
-.cs-lane-text .badge { font-size: 9px; padding: 0 4px; }
 .cs-lane-text a { pointer-events: auto; }
 .cs-lane-text a:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; border-radius: 3px; }
 .cs-lanes-more { display: flex; gap: 10px; align-items: center; margin-top: 6px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
@@ -473,7 +479,7 @@ kbd { display: inline-block; padding: 0 6px; border: 1px solid var(--border-stro
 .cs-ledger-head { height: 46px; background: var(--surface-2); color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; }
 .cs-ledger-head > div { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; overflow: hidden; line-height: 1.2; }
 .cs-ledger-head .num { align-items: flex-end; }
-.cs-ledger-head .badge { font-size: 9px; padding: 0 4px; }
+.cs-ledger-head .badge { font-size: 9px; }
 .cs-ledger-scroll { position: relative; overflow: auto; height: min(480px, 55vh); outline: none; overscroll-behavior: auto; }
 .cs-ledger-scroll:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
 .cs-ledger-row { position: absolute; left: 0; right: 0; border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; }

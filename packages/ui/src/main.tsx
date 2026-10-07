@@ -1,10 +1,12 @@
 import { Component, h, render, type ComponentChildren, type ComponentType } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
-import { hrefs, navigate, route, routeHasAnchor, routeKey, type Route } from "./router.ts";
-import { effectiveTheme, indexStatus, keyboardMapOpen, modalOpen, pendingFile, refreshIndex, startIndexEvents, theme, thresholdsDrawerOpen, toast, toggleTheme } from "./store.ts";
-import { CLI_COMMAND, ISSUES_URL } from "./config.ts";
-import { formatNumber, formatRelative } from "./format.ts";
+import { hrefs, navigate, route, routeHasAnchor, routeKey, splitRunId, type Route } from "./router.ts";
+import { activeLiveRuns, effectiveTheme, indexStatus, keyboardMapOpen, modalOpen, paletteOpen, pendingFile, refreshIndex, startIndexEvents, theme, thresholdsDrawerOpen, toast, toggleTheme } from "./store.ts";
+import { CLI_COMMAND, ISSUES_URL, REPO_URL } from "./config.ts";
+import { CommandPalette } from "./components/CommandPalette.tsx";
+import { Badge } from "./components/Badge.tsx";
+import { formatNumber, formatRelative, formatTokens } from "./format.ts";
 import { useTick } from "./hooks.ts";
 import { KeyboardMap } from "./components/KeyboardMap.tsx";
 import { Toasts } from "./components/Toast.tsx";
@@ -50,9 +52,18 @@ function useGlobalKeys() {
   useEffect(() => {
     let pendingG = 0;
     const handler = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.defaultPrevented) return;
+      // ⌘K / Ctrl+K opens the palette from anywhere, including inside an input.
+      if ((event.metaKey || event.ctrlKey) && !event.altKey && (event.key === "k" || event.key === "K")) {
+        event.preventDefault();
+        if (keyboardMapOpen.value) keyboardMapOpen.value = false;
+        paletteOpen.value = !paletteOpen.value;
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
       const editable = isEditable(event.target);
       if (event.key === "Escape") {
+        if (paletteOpen.value) { paletteOpen.value = false; event.preventDefault(); return; }
         if (keyboardMapOpen.value) { keyboardMapOpen.value = false; event.preventDefault(); return; }
         if (thresholdsDrawerOpen.value) { thresholdsDrawerOpen.value = false; event.preventDefault(); return; }
         if (editable) {
@@ -143,6 +154,25 @@ function ThemeToggle() {
   );
 }
 
+/** "● live" in the top bar whenever a transcript is growing right now; links to the session (the first one when several are live). */
+function LiveLink() {
+  const now = useTick(5_000);
+  const live = activeLiveRuns(now);
+  if (!live.length) return null;
+  const [runId, info] = live[0];
+  const { vendor, id } = splitRunId(runId);
+  const current = route.value;
+  const here = current.name === "session" && current.vendor === vendor && current.id === id;
+  const title = live.length === 1
+    ? `A ${info.vendor ?? vendor} session is being written right now${info.requests ? ` · ${formatNumber(info.requests)} requests` : ""}${info.peak ? ` · ${formatTokens(info.peak)} peak` : ""}`
+    : `${live.length} sessions are being written right now; opens the most recent`;
+  return (
+    <a href={hrefs.session(vendor, id)} class={`topbar-live${here ? " here" : ""}`} title={title} aria-current={here ? "page" : undefined}>
+      <span class="live-dot" aria-hidden="true" />{live.length === 1 ? "live" : `${live.length} live`}
+    </a>
+  );
+}
+
 function TopBar() {
   const current = route.value;
   const mode = backend.value.mode;
@@ -164,8 +194,13 @@ function TopBar() {
           {current.name === "session" || lastSession.value ? (
             <a href={lastSession.value ? hrefs.session(lastSession.value.vendor, lastSession.value.id) : "#/"} class={active("session")} aria-current={current.name === "session" ? "page" : undefined}>Session</a>
           ) : null}
+          <LiveLink />
         </nav>
         <div class="topbar-tools">
+          <button type="button" class="jump-btn" onClick={() => { paletteOpen.value = true; }} title="Jump to a session, screen or action (⌘K / Ctrl+K)" aria-label="Jump to a session, screen or action">
+            <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5" /><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
+            <span class="jump-text">Jump to…</span><kbd class="jump-kbd">⌘K</kbd>
+          </button>
           <IndexPill />
           <button type="button" class="icon-btn" onClick={() => void refreshIndex()} disabled={busy} title={refreshTitle} aria-label={refreshTitle}>
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" class={busy ? "spin" : ""}><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /><path d="M13.5 2.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -206,6 +241,28 @@ function DemoBanner() {
         </span>
       </div>
     </div>
+  );
+}
+
+/** Version, locality promise, provenance legend and the two keyboard entry points; the same on every screen. */
+function Footer() {
+  const mode = backend.value.mode;
+  return (
+    <footer class="app-foot" aria-label="About">
+      <div class="app-foot-inner">
+        <span class="app-foot-brand"><strong>ContextScope</strong> <span class="muted">v{__CS_VERSION__}</span> <span class="muted">· {mode === "companion" ? "reads ~/.claude and ~/.codex on this machine · nothing leaves it" : mode === "memory" ? "an opened export, parsed in this browser" : "demo data"}</span></span>
+        <span class="app-foot-legend" title="Every number carries where it comes from">
+          <span class="muted">Provenance</span>
+          <Badge provenance="observed.vendor" /><Badge provenance="observed.artifact" /><Badge provenance="derived.exact" /><Badge provenance="estimated.local" />
+        </span>
+        <span class="app-foot-links">
+          <button type="button" class="link" onClick={() => { paletteOpen.value = true; }}><kbd>⌘K</kbd> jump</button>
+          <button type="button" class="link" onClick={() => { keyboardMapOpen.value = true; }}><kbd>?</kbd> keys</button>
+          <a href={REPO_URL} target="_blank" rel="noreferrer">GitHub</a>
+          <a href={ISSUES_URL} target="_blank" rel="noreferrer">Report an issue</a>
+        </span>
+      </div>
+    </footer>
   );
 }
 
@@ -294,7 +351,9 @@ function App() {
           <Screen />
         </ErrorBoundary>
       </main>
+      <Footer />
       <KeyboardMap />
+      <CommandPalette />
       <Toasts />
     </>
   );

@@ -49,7 +49,7 @@ export function ContextMixPanel({ data, rangeLabel }: { data?: Overview["context
   const [active, setActive] = useState<string | null>(null);
   const [view, setViewState] = useState<View>(readView);
   const setView = (next: View) => { setViewState(next); saveView(next); };
-  const description = "What filled the main context on each session's last request, as a share of that request, averaged over sessions (each session weighs the same). Subagent windows are separate and not included.";
+  const description = "Mean split of each session's last request; every session weighs the same, subagent windows are not included.";
   if (!data || !data.sessions) {
     return (
       <Panel title="Context at session end" description={description}>
@@ -75,10 +75,13 @@ export function ContextMixPanel({ data, rangeLabel }: { data?: Overview["context
     >
       {view === "stack" ? (
         <MixStack
-          parts={data.rows.map((row) => ({ category: row.category, tokens: row.tokens, share: row.share, sessions: row.sessions }))}
+          compact
+          parts={rows.map((row) => (row.category
+            ? { category: row.category, tokens: row.tokens, share: row.share, sessions: row.sessions }
+            : { category: "other", label: row.label, color: row.color, title: row.full, tokens: row.tokens, share: row.share, sessions: row.sessions }))}
           total={data.meanTotal}
           note="Mean share of each session's last request; the value adds the mean tokens behind it. Estimated per block, reconciled to the vendor's exact request totals."
-          detailOf={(part) => `present in ${part.sessions ?? 0} of ${data.sessions} sessions`}
+          detailOf={(part) => (part.label ? `${rows.find((row) => row.label === part.label)?.folded ?? 0} categories under 1 % each` : `present in ${part.sessions ?? 0} of ${data.sessions} sessions`)}
         />
       ) : <>
       <ol class="context-mix" aria-label={`Mean share of the context at session end by category, ${plural(data.sessions, "session")}`} onMouseLeave={() => setActive(null)}>

@@ -17,6 +17,7 @@ import { ErrorNotice, Loading } from "../components/Status.tsx";
 import { TrendsPanel } from "../components/TrendsPanel.tsx";
 import { ContextMixPanel } from "../components/ContextMixPanel.tsx";
 import { LiveBadge } from "../components/LiveBadge.tsx";
+import { LiveNow } from "../components/LiveNow.tsx";
 
 /**
  * Codex child runs (thread_spawn) arrive nested under their parent. `gitBranch`
@@ -121,10 +122,10 @@ function readScope(): ScopeMode {
   return "repo";
 }
 
-/** Session label (ADR-004 §7.10): project · start; children by agent type, never by raw id. */
-function sessionTitle(r: OverviewRunNode, parentOf?: OverviewRunNode): string {
+/** Session label (ADR-004 §7.10): project · start; children by agent type, never by raw id. In repo scope every row is this repo, so the start alone names it. */
+function sessionTitle(r: OverviewRunNode, parentOf?: OverviewRunNode, scope: ScopeMode = "all"): string {
   if (r.parentRunId) return `${r.agentType ?? "subagent"} · child of ${parentOf ? formatDate(parentOf.startedAt) : splitRunId(r.parentRunId).id.slice(0, 8)}`;
-  return `${r.project.displayName} · ${formatDate(r.startedAt)}`;
+  return scope === "repo" ? formatDate(r.startedAt) : `${r.project.displayName} · ${formatDate(r.startedAt)}`;
 }
 
 export function OverviewScreen() {
@@ -210,8 +211,8 @@ export function OverviewScreen() {
     // Live rows sort first (ADR-003 §3), then newest first; the title is project · start so two rows are never twins.
     { key: "session", label: "Session", title: "Project and start time; model, branch and id underneath", sortValue: (r) => Date.parse(r.startedAt) + (liveOf(r) ? 1e13 : 0), render: (r) => (
       <span class="cell-project">
-        <span>{liveDot(r)}<a href={sessionHref(r)} class="cell-link">{sessionTitle(r, r.parentRunId ? runById.get(r.parentRunId) : undefined)}</a></span>
-        <span class="cell-sub muted" title={r.id}>{[r.summary.models.join(", "), r.gitBranch, splitRunId(r.id).id.slice(0, 8)].filter(Boolean).join(" · ")}</span>
+        <span>{liveDot(r)}<a href={sessionHref(r)} class="cell-link" title={new Date(r.startedAt).toLocaleString()}>{sessionTitle(r, r.parentRunId ? runById.get(r.parentRunId) : undefined, kind ? "all" : scope)}</a></span>
+        <span class="cell-sub muted" title={r.id}>{[r.parentRunId ? undefined : formatRelative(r.startedAt, now), r.summary.models.join(", "), r.gitBranch, splitRunId(r.id).id.slice(0, 8)].filter(Boolean).join(" · ")}</span>
         {r.attribution ? <span class="cell-sub"><span class="pill" title={attributionTitle(r.attribution)}>{attributionText(r.attribution)}</span></span> : null}
         {r.kind === "harness" ? <span class="cell-sub"><span class="pill" title={`Harness run: ${r.entrypoint === "sdk-cli" ? "started through the SDK (entrypoint sdk-cli)" : "a temp directory with no tool use and at most two requests"}. Never part of a population, habits or trends.`}>harness{r.entrypoint ? ` · ${r.entrypoint}` : ""}</span></span> : null}
       </span>
@@ -246,6 +247,8 @@ export function OverviewScreen() {
     <section class="screen screen-overview">
       <ScreenHeader {...headerProps} />
 
+      <LiveNow runById={runById} />
+
       <div class="tiles" role="list">
         <StatTile label="Processed input tokens" value={totals.processedInputTokens} hint="sum of input + cache over all requests" provenance="observed.vendor" trend={trends.processedInputTokens} title={`${formatNumber(totals.processedInputTokens)} tokens`} />
         <StatTile label="Cache-read share" value={percent(totals.cacheReadShare)} hint={`${plural(totals.requests, "request")}`} provenance="derived.exact" trend={trends.requests} accent="var(--series-3)" />
@@ -253,9 +256,11 @@ export function OverviewScreen() {
         <StatTile label="Subagent runs" value={totals.subagents} hint={`${plural(totals.runs, "session")}, ${totals.vendors.length} vendor${totals.vendors.length === 1 ? "" : "s"}`} provenance="observed.artifact" trend={trends.subagents} accent="var(--series-4)" />
       </div>
 
+      {harnessListing ? null : <ContextMixPanel data={data.contextAtEnd} rangeLabel={rangeText(data.range, data.since, scope)} />}
+
       {data.firstFinding ? (
         <Panel title="One change to make first" description="Leverage-ranked: the fix that removes findings in the most sessions of this repository" actions={<a class="btn btn-ghost" href={hrefs.findings()}>All findings</a>}>
-          <FindingCard finding={data.firstFinding} highlight />
+          <FindingCard finding={data.firstFinding} highlight summary />
         </Panel>
       ) : (
         <Panel title="One change to make first">
@@ -263,7 +268,7 @@ export function OverviewScreen() {
         </Panel>
       )}
 
-      {harnessListing ? null : <ContextMixPanel data={data.contextAtEnd} rangeLabel={rangeText(data.range, data.since, scope)} />}
+
 
       <Panel
         title="Sessions"
@@ -307,6 +312,7 @@ export function OverviewScreen() {
         />
       </Panel>
 
+
       {scope === "repo" ? <TrendsPanel trends={trends} repoName={data.scope?.repo.name} rangeLabel={rangeText(data.range, data.since, scope)} /> : null}
 
       <div class="grid-3 offenders">
@@ -319,7 +325,7 @@ export function OverviewScreen() {
                   <li key={b.blockId}>
                     <a href={hrefs.session(vendor, id, { scope: b.scopeId, request: b.firstRequest })} class="offender-row">
                       <span class="offender-main">
-                        <span class="offender-label"><span class="cat-dot" style={{ background: CATEGORY_META[b.category]?.color }} title={CATEGORY_META[b.category]?.label} /> {b.label ?? b.tool ?? CATEGORY_META[b.category]?.short ?? b.category}</span>
+                        <span class="offender-label" title={`${b.label ?? b.tool ?? CATEGORY_META[b.category]?.short ?? b.category} · ${CATEGORY_META[b.category]?.label ?? b.category}`}><span class="cat-dot" style={{ background: CATEGORY_META[b.category]?.color }} /> {b.label ?? b.tool ?? CATEGORY_META[b.category]?.short ?? b.category}</span>
                         <span class="offender-sub muted">{runLabel(b.runId)} · {runVendor(b.runId)} · req {b.firstRequest}{b.scopeId !== "main" ? ` · ${b.scopeId}` : ""}</span>
                       </span>
                       <span class="offender-value">{formatTokens(b.estTokens)} <Badge provenance="estimated.local" /></span>
@@ -341,7 +347,7 @@ export function OverviewScreen() {
                   <li key={`${h.runId}#${h.scopeId}`}>
                     <a href={hrefs.session(vendor, id, { scope: h.scopeId })} class="offender-row">
                       <span class="offender-main">
-                        <span class="offender-label">{childName}</span>
+                        <span class="offender-label" title={childName}>{childName}</span>
                         <span class="offender-sub" title={`Child peak ${formatNumber(h.childPeak)} tokens → handoff ${formatNumber(h.handoffTokens)} tokens; ratio = peak ÷ handoff`}>peak {formatTokens(h.childPeak)} → {formatTokens(h.handoffTokens)} · <strong>{formatRatio(h.ratio)}</strong> compression</span>
                         <span class="offender-sub muted">{runLabel(h.runId)} · {runVendor(h.runId)}</span>
                       </span>
@@ -362,7 +368,7 @@ export function OverviewScreen() {
                   <li key={c.runId}>
                     <a href={hrefs.session(vendor, id)} class="offender-row">
                       <span class="offender-main">
-                        <span class="offender-label">{runLabel(c.runId)}</span>
+                        <span class="offender-label" title={runLabel(c.runId)}>{runLabel(c.runId)}</span>
                         <span class="offender-sub muted">{runVendor(c.runId)} · {formatTokens(c.processedInputTokens)} processed</span>
                       </span>
                       <span class="offender-value">{c.compactions} <span class="muted">×</span> <Badge provenance="observed.vendor" /></span>

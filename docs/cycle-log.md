@@ -89,3 +89,13 @@ One entry per cycle. Each cycle = analysis → evaluation → implementation →
 - `scan --repo context-viewer`: 3 sessions (124 on this machine), 50 subagents, 471M processed tokens, 65 harness runs and 1 unattributed (was 59 unattributed), cost by tool Bash 29% · exec 14% · Read 14%.
 - Command surface: `start, scan, index, export, hooks, check, status, experiment, help`.
 - NOT done this cycle: the cycle-3 review wave (backend/UI/architect) and its fix wave; `changes` has nothing to show for this repo yet (no instruction files with git history here); the ADR's "56 harness · 3 unattributed" became 65 · 1 because Codex temp probes classify as harness too.
+
+## UI pass for daily use — 2026-10-07
+
+Looked at every screen against this machine's real sessions (218 on the machine, 8 in this repo, two live) and asked what a developer opens the tool for during a working day. Shipped in `packages/ui` (0.11.0, unreleased):
+- **Live now** hero on the overview + a **live** link in the top bar: the session the developer is sitting in, how full its window is, one click to the live view. Before this the live session was one table row with a small pill.
+- **Command palette** (⌘K): any session, screen or action from the keyboard; sessions come from one machine-wide overview call cached per index version, live ones first.
+- **Provenance badges** shrunk to a dot plus one word; per-lane badges dropped; ledger header no longer clips. Same information, a third of the ink.
+- Session header: scope selector + Export popover only; hints under the title. Footer: version (baked in by `build.mjs` from the package), locality promise, provenance legend, ⌘K / ? entry points. Favicon, theme-color.
+- Bug found on the way: `useFocusTrap` made `#app` inert, which includes every dialog rendered inside it; the thresholds drawer could not be typed into. Fixed by making only the dialog's siblings inert.
+- Verified in Chrome on the live companion (dark and light), CLI e2e + export tests, root site tests, typecheck and build; `public/app` re-synced.

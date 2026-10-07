@@ -37,12 +37,17 @@ export const STACK_ORDER: Category[] = [
   "subagent_handoff", "compaction_summary", "attachments", "other",
 ];
 
+/**
+ * Provenance labels are one word each so a badge fits next to a number in a
+ * table cell; the hover hint carries the full meaning and the footer legend
+ * repeats it once per page (ADR-001: every number carries its provenance).
+ */
 export const PROVENANCE_META = {
-  "observed.vendor":   { label: "observed · vendor",   hint: "Emitted by the vendor runtime (token usage, compaction metadata, window size)." },
-  "observed.artifact": { label: "observed · artifact", hint: "Directly present in a session or repository file (sizes, paths, tool names)." },
-  "derived.exact":     { label: "derived",             hint: "Deterministic arithmetic over observed values." },
-  "estimated.local":   { label: "estimated",           hint: "Local chars-per-token estimate, reconciled to the exact vendor total where one exists." },
-  unknown:             { label: "unknown",             hint: "No evidence available." },
+  "observed.vendor":   { label: "vendor",    long: "observed · vendor",   hint: "Observed · vendor: emitted by the vendor runtime (token usage, compaction metadata, window size)." },
+  "observed.artifact": { label: "artifact",  long: "observed · artifact", hint: "Observed · artifact: directly present in a session or repository file (sizes, paths, tool names)." },
+  "derived.exact":     { label: "derived",   long: "derived · exact",     hint: "Derived: deterministic arithmetic over observed values." },
+  "estimated.local":   { label: "estimated", long: "estimated · local",   hint: "Estimated: local chars-per-token estimate, reconciled to the exact vendor total where one exists." },
+  unknown:             { label: "unknown",   long: "unknown",             hint: "No evidence available." },
 } as const;
 
 /**

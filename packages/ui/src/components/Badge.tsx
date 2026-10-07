@@ -28,8 +28,8 @@ export function Badge(props: BadgeProps) {
   if (props.provenance) {
     const meta = PROVENANCE_META[props.provenance] ?? PROVENANCE_META.unknown;
     return (
-      <span class={`badge badge-prov badge-${PROVENANCE_TONE[props.provenance] ?? "neutral"} ${props.class ?? ""}`} title={props.title ?? meta.hint} data-provenance={props.provenance}>
-        {meta.label}
+      <span class={`badge badge-prov badge-${PROVENANCE_TONE[props.provenance] ?? "neutral"} ${props.class ?? ""}`} title={props.title ?? meta.hint} data-provenance={props.provenance} aria-label={meta.long}>
+        <span class="badge-dot" aria-hidden="true" />{meta.label}
       </span>
     );
   }

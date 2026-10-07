@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.resolve(here, "../cli/ui");
 const watch = process.argv.includes("--watch");
+const version = JSON.parse(await readFile(path.resolve(here, "../cli/package.json"), "utf8")).version ?? "dev";
 
 /**
  * One entry (`app.js`) plus lazy chunks: the Session and Setup screens load on
@@ -26,7 +27,7 @@ const options = {
   entryNames: "[name]",
   chunkNames: "chunk-[hash]",
   legalComments: "none",
-  define: { "process.env.NODE_ENV": JSON.stringify(watch ? "development" : "production") },
+  define: { "process.env.NODE_ENV": JSON.stringify(watch ? "development" : "production"), __CS_VERSION__: JSON.stringify(version) },
   logLevel: "info",
 };
 

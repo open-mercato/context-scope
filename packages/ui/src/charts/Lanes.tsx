@@ -15,7 +15,6 @@ import type { AgentScope } from "@ir/types.ts";
 import { formatTokens } from "../categories.ts";
 import { formatRatio } from "../format.ts";
 import type { LinearScale } from "./scale.ts";
-import { Badge } from "../components/Badge.tsx";
 import { hoveredLane, showAllLanes, setHovered } from "../session-state.ts";
 
 export interface LaneRow {
@@ -137,10 +136,9 @@ export function Lanes({ scopes, parentId, x, width, onOpen, hrefFor }: LanesProp
               <li key={s.id} class="cs-lane-text" style={{ left: `${left}px`, top: `${top}px`, maxWidth: `${Math.max(120, width - left)}px` }}>
                 <strong>{row.depth > 0 ? "└ " : ""}{s.agentType ?? s.kind}</strong>
                 {s.description && <span class="cs-muted">{s.description}</span>}
-                <span class="cs-muted">peak</span><span>{formatTokens(s.peak.value)}</span><Badge provenance={s.peak.provenance} />
+                <span class="cs-muted">peak</span><span>{formatTokens(s.peak.value)}</span>
                 <span class="cs-muted">{count} req · {s.status}</span>
                 <span class="cs-lane-handoff">{arrowLabel(s, open)}</span>
-                {s.handoff && <Badge provenance={s.handoff.tokens.provenance} />}
                 <a href={hrefFor(s.id)} class="cs-muted" aria-label={`Open ${s.agentType ?? s.kind} ${s.id}: launched at request ${s.launchedAtRequest ?? "?"}, ${open ? "still open" : `delivered at request ${s.deliveredAtRequest}`}, peak ${formatTokens(s.peak.value)}`}
                   onClick={(e) => { e.preventDefault(); onOpen(s.id); }} onFocus={() => hoverLane(s.id, Math.round(row.start))} onBlur={() => hoverLane(null, null)}>open ›</a>
               </li>

@@ -479,16 +479,16 @@ function SessionHeader({ run, summary, props, openScope, live }: { run: RunRespo
           <LiveBadge live={live} />
           {(run.summary.models.length || run.gitBranch) ? <span class="cs-muted cs-title-sub">{[run.summary.models.join(", "), run.gitBranch].filter(Boolean).join(" · ")}</span> : null}
         </div>
+        <p class="cs-hints-line" aria-label="Keyboard hints"><span><span class="cs-kbd">j</span>/<span class="cs-kbd">k</span> request</span><span><span class="cs-kbd">[</span>/<span class="cs-kbd">]</span> compaction</span><span><span class="cs-kbd">p</span> pin</span><span><span class="cs-kbd">z</span> zoom</span><span><span class="cs-kbd">Esc</span> unpin</span>{live ? <span><span class="cs-kbd">f</span> follow</span> : null}<span><span class="cs-kbd">?</span> all keys</span></p>
       </div>
       <div class="cs-head-right">
         {live && <FollowToggle />}
         {live?.parseMs !== undefined && <span class="cs-live-meta" title="Time the companion took to re-parse the transcript after the last change">re-parse {formatInt(live.parseMs)} ms</span>}
-        {backend.value.mode !== "memory" && <ExportControl vendor={props.vendor} id={props.id} defaultScopes={run.scopes.length <= 8 ? "all" : "main"} currentScope={summary.kind === "subagent" ? summary.id : undefined} />}
         {summary.kind === "subagent" && <button type="button" class="cs-rail-toggle" onClick={() => openScope(summary.parentScopeId ?? "main")}>‹ Back to {summary.parentScopeId && summary.parentScopeId !== "main" ? (byId.get(summary.parentScopeId)?.agentType ?? "parent") : "main"}</button>}
-        <label>Scope <select class="cs-select" value={summary.id} onChange={(e) => openScope((e.currentTarget as HTMLSelectElement).value)}>
-          {run.scopes.map((s) => <option key={s.id} value={s.id}>{"  ".repeat(s.depth)}{label(s)} · {formatInt(scopeRequestCount(s))} req</option>)}
+        <label>Scope <select class="cs-select" value={summary.id} onChange={(e) => openScope((e.currentTarget as HTMLSelectElement).value)} title="The main scope or one subagent; every panel below follows this choice">
+          {run.scopes.map((s) => <option key={s.id} value={s.id}>{"  ".repeat(s.depth)}{label(s)} · {formatInt(scopeRequestCount(s))} req</option>)}
         </select></label>
-        <span class="cs-hints"><span class="cs-kbd">j</span>/<span class="cs-kbd">k</span> request · <span class="cs-kbd">[</span>/<span class="cs-kbd">]</span> compaction · <span class="cs-kbd">p</span> pin · <span class="cs-kbd">z</span> zoom · <span class="cs-kbd">Esc</span> unpin{live ? <> · <span class="cs-kbd">f</span> follow</> : null}</span>
+        {backend.value.mode !== "memory" && <ExportControl vendor={props.vendor} id={props.id} defaultScopes={run.scopes.length <= 8 ? "all" : "main"} currentScope={summary.kind === "subagent" ? summary.id : undefined} />}
         {!railOpen.value && <button type="button" class="cs-rail-toggle" onClick={() => { railOpen.value = true; }}>Show rail</button>}
       </div>
     </div>
@@ -516,20 +516,37 @@ function ExportControl({ vendor, id, defaultScopes, currentScope }: { vendor: st
       setBusy(false);
     }
   };
+  const menu = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => { const el = menu.current; if (el?.open && !el.contains(e.target as Node)) el.open = false; };
+    const onKey = (e: KeyboardEvent) => { const el = menu.current; if (e.key === "Escape" && el?.open) { el.open = false; e.stopPropagation(); } };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey, true);
+    return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey, true); };
+  }, []);
   return (
-    <span class="cs-export">
-      <label class="cs-export-redact" title="Which scopes the file carries: the main scope only (small), every subagent, or the scope on screen">
-        <select class="cs-select" value={scopes} onChange={(e) => setScopes((e.currentTarget as HTMLSelectElement).value)} aria-label="Scopes to export">
-          <option value="main">main scope</option>
-          <option value="all">all scopes</option>
-          {currentScope ? <option value={currentScope}>this scope ({currentScope})</option> : null}
-        </select>
-      </label>
-      <label class="cs-export-redact" title="Replace file labels and the project name with sha1-10 hashes so the file can leave the team; token counts and shapes stay">
-        <input type="checkbox" checked={redact} onChange={(e) => setRedact((e.currentTarget as HTMLInputElement).checked)} /> redact
-      </label>
-      <button type="button" class="cs-follow" disabled={busy} onClick={() => { void run(); }} title="Download this session as JSON: sizes, hashes and token counts only, no text">{busy ? "Exporting…" : "Export"}</button>
-    </span>
+    <details ref={menu} class="cs-export-menu">
+      <summary class="cs-rail-toggle" title="Download this session as JSON: sizes, hashes and token counts only, never text" role="button" aria-haspopup="dialog">
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1v7M3 5.5L6 8.5 9 5.5M2 10.5h8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        Export
+      </summary>
+      <div class="cs-export-pop" role="dialog" aria-label="Export this session">
+        <label title="Which scopes the file carries: the main scope only (small), every subagent, or the scope on screen">
+          <span>Scopes</span>
+          <select class="cs-select" value={scopes} onChange={(e) => setScopes((e.currentTarget as HTMLSelectElement).value)} aria-label="Scopes to export">
+            <option value="main">main scope</option>
+            <option value="all">all scopes</option>
+            {currentScope ? <option value={currentScope}>this scope ({currentScope})</option> : null}
+          </select>
+        </label>
+        <label title="Replace file labels and the project name with sha1-10 hashes so the file can leave the team; token counts and shapes stay">
+          <span>Redact labels and project name</span>
+          <input type="checkbox" checked={redact} onChange={(e) => setRedact((e.currentTarget as HTMLInputElement).checked)} />
+        </label>
+        <p>Sizes, hashes and token counts only; no message text. Open it later via Open an export.</p>
+        <button type="button" class="cs-btn" disabled={busy} onClick={() => { void run(); }}>{busy ? "Exporting…" : "Download JSON"}</button>
+      </div>
+    </details>
   );
 }
 
@@ -573,7 +590,7 @@ function ForecastCard({ forecast: raw, window: win, lastRequest, autoCompactions
     ? `observed: median of ${autoCompactions ? `${autoCompactions} auto-compaction${autoCompactions === 1 ? "" : "s"} in this session` : "this session's auto-compactions"}${range}`
     : prov === "estimated.local"
       ? `calibrated from ${basis?.events ? `${basis.events} local auto-compaction${basis.events === 1 ? "" : "s"}` : "local auto-compactions"}${basis?.source ? ` (${basis.source})` : ""}${range}`
-      : `${PROVENANCE_META[prov]?.label ?? prov}${range}`;
+      : `${PROVENANCE_META[prov]?.long ?? prov}${range}`;
   const far = forecast.requestsLeft > FORECAST_FAR_REQUESTS || (forecast.minutesLeft > FORECAST_FAR_MINUTES && forecast.perMinute > 0);
   const flat = forecast.status === "flat" || !(forecast.perRequest > 0);
   return (
@@ -694,7 +711,7 @@ const RailFacts = memo(function RailFacts({ run, summary, stats, mainStats, rend
         </dl>
         <details class="cs-help">
           <summary>What the numbers mean</summary>
-          <p><strong>Total</strong> is the vendor's own input count per request ({PROVENANCE_META["observed.vendor"].label}). The <strong>stack</strong> splits that total by category using local size estimates, scaled so the stack sums to the exact total ({PROVENANCE_META["estimated.local"].label}).</p>
+          <p><strong>Total</strong> is the vendor's own input count per request ({PROVENANCE_META["observed.vendor"].long}). The <strong>stack</strong> splits that total by category using local size estimates, scaled so the stack sums to the exact total ({PROVENANCE_META["estimated.local"].long}).</p>
           <p><strong>Unlogged</strong> (hatched) is input the model saw that is not in the transcript: resumed history, hidden injections, tool schemas beyond the baseline. A dotted vertical marks a persistent step in that base.</p>
           <p><strong>Estimator error</strong> is |1 − k| per request, where k is the scale that makes estimates match the vendor total, over requests whose k stayed inside the clamp band. p95 above {formatPercent(APPROX_P95, 0)} for the scope on screen marks the composition approximate; above {formatPercent(HIDE_P95, 0)} the stack is hidden.</p>
           <p><strong>Cache read</strong> is the prefix the vendor served from cache; <strong>cache creation</strong> is what it wrote; a creation spike without a large new block means something early in the prompt changed.</p>

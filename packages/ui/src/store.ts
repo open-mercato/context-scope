@@ -224,12 +224,25 @@ export async function requestsSignature(requests: Request[], upTo: number): Prom
 /** A file dropped anywhere in the app; the Open screen picks it up and opens it (#21). */
 export const pendingFile = signal<File | null>(null);
 
-// ---------- keyboard map ----------
+// ---------- keyboard map, command palette ----------
 export const keyboardMapOpen = signal(false);
+/** ⌘K / Ctrl+K: jump to a session, screen or action. */
+export const paletteOpen = signal(false);
 
-/** True while any modal (keyboard map, thresholds drawer) is open; screen key handlers must stand down. */
+/** True while any modal (keyboard map, palette, thresholds drawer) is open; screen key handlers must stand down. */
 export function modalOpen(): boolean {
-  return keyboardMapOpen.value || thresholdsDrawerOpen.value;
+  return keyboardMapOpen.value || paletteOpen.value || thresholdsDrawerOpen.value;
+}
+
+/** Live runs that are neither idle nor stale: what the top bar and the overview hero show. */
+export function activeLiveRuns(now = Date.now(), staleMs = 3 * 60_000): Array<[string, LiveInfo]> {
+  const out: Array<[string, LiveInfo]> = [];
+  for (const [id, info] of liveRuns.value) {
+    if (liveIdle.value.has(id)) continue;
+    const at = Date.parse(info.at);
+    if (Number.isFinite(at) && now - at <= staleMs) out.push([id, info]);
+  }
+  return out;
 }
 
 // ---------- thresholds ----------

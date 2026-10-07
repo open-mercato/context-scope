@@ -96,14 +96,21 @@ export function EndMixBar({ last, blocks, scopeName, reliable }: { last?: Reques
   );
 }
 
-export interface MixPart { category: Category; tokens: number; share: number; sessions?: number }
+export interface MixPart {
+  category: Category; tokens: number; share: number; sessions?: number;
+  /** Overrides for a folded pseudo-part ("4 smaller"): legend text, swatch colour, hover text. */
+  label?: string; color?: string; title?: string;
+}
+const partShort = (part: MixPart) => part.label ?? CATEGORY_META[part.category].short;
+const partLabel = (part: MixPart) => part.title ?? CATEGORY_META[part.category].label;
+const partColor = (part: MixPart) => part.color ?? CATEGORY_META[part.category].color;
 
 /**
  * One 100 % bar split by category (stack order, occupancy-chart colours) with a
  * legend that doubles as the table. With `onSelect` segments and legend rows are
  * buttons (the session screen opens a split); without it they only highlight.
  */
-export function MixStack({ parts, total, selected = null, onSelect, note, detailOf }: { parts: MixPart[]; total: number; selected?: Category | null; onSelect?: (category: Category) => void; note?: string; detailOf?: (part: MixPart) => string }) {
+export function MixStack({ parts, total, selected = null, onSelect, note, detailOf, compact = false }: { parts: MixPart[]; total: number; selected?: Category | null; onSelect?: (category: Category) => void; note?: string; detailOf?: (part: MixPart) => string; compact?: boolean }) {
   const [active, setActive] = useState<Category | null>(null);
   const legend = [...parts].sort((a, b) => b.share - a.share);
   const focus = parts.find((part) => part.category === active);
@@ -115,27 +122,27 @@ export function MixStack({ parts, total, selected = null, onSelect, note, detail
   const Row = onSelect ? "button" : "span";
   return (
     <>
-      <div class="end-mix-bar" role="group" aria-label={`Last request split: ${legend.map((part) => `${CATEGORY_META[part.category].short} ${percent(part.share, 1)}`).join(", ")}`} onMouseLeave={() => setActive(null)}>
+      <div class="end-mix-bar" role="group" aria-label={`Last request split: ${legend.map((part) => `${partShort(part)} ${percent(part.share, 1)}`).join(", ")}`} onMouseLeave={() => setActive(null)}>
         {parts.map((part) => (
           <Seg
             type={onSelect ? "button" : undefined}
             key={part.category}
             class={`end-mix-seg${part.category === "unlogged" ? " cs-swatch-hatch" : ""}${dimmed(part.category) ? " dim" : ""}${open === part.category ? " on" : ""}`}
-            style={{ flexGrow: part.share, background: CATEGORY_META[part.category].color }}
+            style={{ flexGrow: part.share, background: partColor(part) }}
             onMouseEnter={() => setActive(part.category)}
             onClick={onSelect ? () => toggle(part.category) : undefined}
             aria-pressed={onSelect ? open === part.category : undefined}
-            aria-label={`${CATEGORY_META[part.category].short} ${percent(part.share, 1)}`}
-            title={`${CATEGORY_META[part.category].label}: ${percent(part.share, 1)} · ${formatNumber(part.tokens)} tokens${hint}`}
+            aria-label={`${partShort(part)} ${percent(part.share, 1)}`}
+            title={`${partLabel(part)}: ${percent(part.share, 1)} · ${formatNumber(part.tokens)} tokens${hint}`}
           />
         ))}
       </div>
-      <ul class="end-mix-legend" onMouseLeave={() => setActive(null)}>
+      <ul class={`end-mix-legend${compact ? " end-mix-legend-compact" : ""}`} onMouseLeave={() => setActive(null)}>
         {legend.map((part) => (
-          <li key={part.category}>
-            <Row type={onSelect ? "button" : undefined} tabIndex={0} class={`end-mix-row${dimmed(part.category) ? " dim" : ""}${open === part.category ? " on" : ""}`} aria-pressed={onSelect ? open === part.category : undefined} onMouseEnter={() => setActive(part.category)} onFocus={() => setActive(part.category)} onBlur={() => setActive(null)} onClick={onSelect ? () => toggle(part.category) : undefined} title={`${CATEGORY_META[part.category].label}${hint}`}>
-              <span class={`cs-swatch${part.category === "unlogged" ? " cs-swatch-hatch" : ""}`} style={{ background: CATEGORY_META[part.category].color }} />
-              <span class="end-mix-name">{CATEGORY_META[part.category].short}</span>
+          <li key={part.label ?? part.category}>
+            <Row type={onSelect ? "button" : undefined} tabIndex={0} class={`end-mix-row${dimmed(part.category) ? " dim" : ""}${open === part.category ? " on" : ""}`} aria-pressed={onSelect ? open === part.category : undefined} onMouseEnter={() => setActive(part.category)} onFocus={() => setActive(part.category)} onBlur={() => setActive(null)} onClick={onSelect ? () => toggle(part.category) : undefined} title={`${partLabel(part)}${hint}`}>
+              <span class={`cs-swatch${part.category === "unlogged" ? " cs-swatch-hatch" : ""}`} style={{ background: partColor(part) }} />
+              <span class="end-mix-name">{partShort(part)}</span>
               <strong>{percent(part.share, 1)}</strong>
               <span class="muted">{formatTokens(part.tokens)}</span>
             </Row>
@@ -143,7 +150,7 @@ export function MixStack({ parts, total, selected = null, onSelect, note, detail
         ))}
       </ul>
       <p class="end-mix-detail muted" aria-live="polite">
-        {focus ? <>{CATEGORY_META[focus.category].label} · <strong>{percent(focus.share, 1)}</strong> · {formatNumber(focus.tokens)} tokens{detailOf ? ` · ${detailOf(focus)}` : ""}</> : <>{note ?? `Estimated per block, reconciled to the vendor's exact total of ${formatNumber(total)} tokens.`}</>}
+        {focus ? <>{partLabel(focus)} · <strong>{percent(focus.share, 1)}</strong> · {formatNumber(focus.tokens)} tokens{detailOf ? ` · ${detailOf(focus)}` : ""}</> : <>{note ?? `Estimated per block, reconciled to the vendor's exact total of ${formatNumber(total)} tokens.`}</>}
       </p>
     </>
   );
