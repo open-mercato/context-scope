@@ -29,7 +29,8 @@ test("check-pass exits 0 and prints the budget table", async () => {
   const result = await check(["--repo", repo("check-pass")]);
   assert.equal(result.code, 0, result.stderr);
   assert.match(result.stdout, /^ContextScope check · check-pass/);
-  assert.match(result.stdout, /claude\s+startup\s+\d+ \/ 6,000 tokens\s+ok/);
+  assert.match(result.stdout, /claude\s+startup\s+\d+ \/ 6,000 tokens\s+ok\s+\(claude-calibrated, from disk\)/, "the budget line names its basis");
+  assert.doesNotMatch(result.stdout, /estimated from disk/);
   assert.match(result.stdout, /0 violations, 0 findings at or above high → ok \(exit 0\)/);
   assert.ok(Date.now() - started < 2000, "check under 2 s");
 });
@@ -47,7 +48,7 @@ test("check-broken-ref: missing reference is a violation (exit 1); --no-broken-r
   const failing = await check(["--repo", repo("check-broken-ref")]);
   assert.equal(failing.code, 1);
   assert.match(failing.stdout, /CLAUDE\.md → docs\/missing\.md\s+missing reference\s+FAIL/);
-  assert.match(failing.stdout, /\[MEDIUM\] S-05 .*\(below --fail-on\)/);
+  assert.match(failing.stdout, /\[LOW\] S-05 .*\(below --fail-on\)/);
   const relaxed = await check(["--repo", repo("check-broken-ref"), "--no-broken-refs"]);
   assert.equal(relaxed.code, 0, relaxed.stdout);
   assert.doesNotMatch(relaxed.stdout, /S-05/);
@@ -83,6 +84,7 @@ test("--json carries ok, exitCode, budget, violations and findings", async () =>
   assert.equal(json.ok, false);
   assert.equal(json.exitCode, 1);
   assert.equal(json.budget.claude.ok, true);
+  assert.equal(json.budget.claude.basis, "claude");
   assert.deepEqual(json.violations.map((violation) => violation.kind), ["broken-ref"]);
   assert.equal(json.violations[0].ref, "docs/missing.md");
   assert.deepEqual(json.findings.map((finding) => finding.ruleId), ["S-05"]);
@@ -116,6 +118,34 @@ test("runCheck ignores globbed files for violations and findings; github annotat
   assert.equal(annotations, "::error file=a.md,line=1::line1%0Aline2 100%25");
   const odd = renderGithub({ violations: [{ kind: "file", file: "docs/a,b:c.md", message: "x" }], findings: [], config });
   assert.equal(odd, "::error file=docs/a%2Cb%3Ac.md,line=1::x", "`,` and `:` are escaped in property values");
+});
+
+test("--max-instruction-file judges a file on its own basis: a shared file by the larger of its vendors, labelled", async () => {
+  const base = await mkdtemp(path.join(os.tmpdir(), "contextscope-check-basis-"));
+  try {
+    const text = "Keep functions small and name them after what they return. ".repeat(60);
+    await writeFile(path.join(base, "CLAUDE.md"), `# Project\n\n${text}`);
+    await writeFile(path.join(base, "AGENTS.md"), `# Project\n\n${text}`);
+    // 3.6 KB of prose: about 1.6k Claude tokens, about 0.9k Codex tokens; 500 trips both, on each file's own basis.
+    await writeFile(path.join(base, ".contextscope.json"), JSON.stringify({ budgets: { instructionFileTokens: 500, startupTokens: 100000 } }));
+    const result = await check(["--repo", base, "--json"]);
+    assert.equal(result.code, 1, result.stderr);
+    const json = JSON.parse(result.stdout);
+    const files = Object.fromEntries(json.violations.filter((violation) => violation.kind === "file").map((violation) => [violation.file, violation]));
+    assert.equal(files["CLAUDE.md"].basis, "claude");
+    assert.equal(files["AGENTS.md"].basis, "codex");
+    assert.ok(files["CLAUDE.md"].value > files["AGENTS.md"].value, "the same bytes are more Claude tokens than Codex tokens");
+    assert.match(files["CLAUDE.md"].message, /claude-calibrated/);
+    assert.equal(json.budget.claude.basis, "claude");
+    assert.equal(json.budget.codex.basis, "codex");
+    assert.ok(json.budget.claude.startup > json.budget.codex.startup, "each vendor's budget uses its own calibration of the same-sized file");
+    const text2 = await check(["--repo", base]);
+    assert.match(text2.stdout, /CLAUDE\.md\s+[\d,]+ tokens > 500\s+FAIL\s+\(claude-calibrated\)/);
+    assert.match(text2.stdout, /AGENTS\.md\s+[\d,]+ tokens > 500\s+FAIL\s+\(codex-calibrated\)/);
+    assert.match(text2.stdout, /codex\s+startup.*\(codex-calibrated, from disk\)/);
+  } finally {
+    await rm(base, { recursive: true, force: true });
+  }
 });
 
 test("one fact, one line: same (rule, title, file) from two vendors merges with a vendor tag; S-01 file findings fold into the size violation", () => {

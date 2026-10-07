@@ -80,7 +80,7 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { stat } from "node:fs/promises";
 import { readJsonl } from "../ir/jsonl.mjs";
-import { byteLength, calibrationFor, detectKind, estimateTokens, estimateTokensFromBytes, imageTokensFor } from "../ir/estimate.mjs";
+import { byteLength, calibrationFor, detectBlockKind, detectKind, estimateTokens, estimateTokensFromBytes, imageTokensFor } from "../ir/estimate.mjs";
 import { finalizeRun } from "../ir/finalize.mjs";
 import { projectKeyFor } from "../ir/project.mjs";
 import { classifyCodexCall, inspectToolOutput, relativeTarget } from "./codex-tools.mjs";
@@ -595,7 +595,9 @@ class CodexRolloutParser {
     } else if (!["file", "shell", "search", "web"].includes(kind)) {
       category = "tool_result.other";
     }
-    const detected = detectKind(text);
+    // A `cat`/read of a PDF, image or office file: the model gets a converted document, not these bytes, so
+    // the block is `binary` (its own ratio) when the target's extension and the content agree (estimate-core.mjs).
+    const detected = detectBlockKind(text, { target: call?.tool.target });
     const block = this.addBlock({
       category, text, kind: detected, label: tool.target ? `${tool.subtool ?? name} ${tool.target}` : (tool.subtool ?? name), tool, toolUseId: callId, agentId, side: "input", at,
     });

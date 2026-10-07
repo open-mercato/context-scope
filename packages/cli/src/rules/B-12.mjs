@@ -30,7 +30,7 @@ export default {
       fix: platformFix(run, {
         claude: { summary: "Delegate exploration to subagents, search with limits, and compact when a phase ends.", snippet: "Agent { description: \"explore\", prompt: \"Find <what>; return paths and line refs only, under 400 words.\" }\nGrep { pattern: \"<pattern>\", output_mode: \"files_with_matches\", head_limit: 50 }" },
         codex: { summary: "Delegate exploration to a subagent, search with limits, and compact when a phase ends.", snippet: "rg -l '<pattern>' | head -50\n/compact   # after exploration, before implementation" },
-      }),
+      }, { scope: main }),
     })];
   },
 };

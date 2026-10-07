@@ -87,10 +87,11 @@ export function FindingGroup({ group, defaultOpen = false, runLabel, onShowEvide
           )}
           <div class="finding-fix">
             <div class="finding-fix-head">
-              <span class="finding-k">Fix ({platform}):</span> {f.fix.summary}
+              <span class="finding-k">Suggested fix ({platform}):</span> {f.fix.summary}
               {f.fix.path ? <> → <code class="fix-path">{f.fix.path}</code></> : null}
             </div>
             {f.fix.snippet ? <pre class="fix-snippet" tabIndex={0}><code>{f.fix.snippet}</code></pre> : null}
+            <p class="fix-note">A hypothesis, not a verdict: the numbers are measured; the cause and the fix are inferred. Apply it, then check the next sessions.</p>
           </div>
           <div class="fg-footer">
             <button type="button" class="btn btn-primary" data-copy-fix onClick={() => copyText(fixText(f), "Fix copied to clipboard")}>Copy fix</button>

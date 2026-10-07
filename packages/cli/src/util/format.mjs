@@ -59,3 +59,16 @@ export function padLeft(text, width) {
   const value = String(text);
   return value.length >= width ? value : " ".repeat(width - value.length) + value;
 }
+
+/**
+ * Human label of an estimate basis (`estBasis` / `basis` fields): "claude" →
+ * "claude-calibrated", "max(claude,codex)" → "max of claude/codex", "neutral"
+ * → "neutral ratio" (no calibrated vendor).
+ */
+export function formatBasis(basis) {
+  const value = String(basis ?? "").trim();
+  if (!value || value === "neutral") return "neutral ratio";
+  const max = /^max\((.+)\)$/.exec(value);
+  if (max) return `max of ${max[1].split(",").join("/")}`;
+  return `${value}-calibrated`;
+}

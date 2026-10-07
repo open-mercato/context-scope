@@ -96,6 +96,7 @@ test("messy fixture fires S-01..S-06, S-08..S-12 with well-formed findings", asy
   const s05 = result["S-05"];
   assert.deepEqual(s05.map(f => f.evidence[0].ref).sort(), ["AGENTS.md", "CLAUDE.md"]);
   assert.ok(s05.find(f => f.evidence[0].ref === "CLAUDE.md").evidence.some(e => e.ref === "docs/style-guide.md"));
+  assert.ok(s05.every(f => f.severity === "low"), "S-05 is hygiene, never a CI gate on its own");
 
   const s06 = result["S-06"];
   assert.deepEqual(s06.map(f => f.vendor).sort(), ["claude", "codex"]);

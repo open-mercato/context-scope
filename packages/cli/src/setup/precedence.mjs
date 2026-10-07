@@ -3,6 +3,7 @@
  * precedence, loaded first). Sources: docs/one-command-discovery-research.md
  * "Context configuration" and the vendor memory docs.
  */
+import { estTokensFor } from "../ir/estimate.mjs";
 
 export const CLAUDE_PRECEDENCE = { user: 1, project: 2, local: 3, rules: 4, nested: 5 };
 export const CODEX_PRECEDENCE = { user: 1, project: 2, override: 3, nested: 4 };
@@ -24,8 +25,9 @@ export function chainFor(files, vendor) {
     .sort((a, b) => a.precedence - b.precedence || a.path.localeCompare(b.path));
 }
 
+/** The chain's size as that vendor's tokenizer would see it (`estTokensBy[vendor]`; neutral for uncalibrated vendors). */
 export function chainTokens(files, vendor) {
-  return chainFor(files, vendor).reduce((sum, file) => sum + file.estTokens, 0);
+  return chainFor(files, vendor).reduce((sum, file) => sum + estTokensFor(file, vendor), 0);
 }
 
 export function rootInstructionFile(files, vendor) {

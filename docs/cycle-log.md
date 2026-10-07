@@ -99,3 +99,11 @@ Looked at every screen against this machine's real sessions (218 on the machine,
 - Session header: scope selector + Export popover only; hints under the title. Footer: version (baked in by `build.mjs` from the package), locality promise, provenance legend, ⌘K / ? entry points. Favicon, theme-color.
 - Bug found on the way: `useFocusTrap` made `#app` inert, which includes every dialog rendered inside it; the thresholds drawer could not be typed into. Fixed by making only the dialog's siblings inert.
 - Verified in Chrome on the live companion (dark and light), CLI e2e + export tests, root site tests, typecheck and build; `public/app` re-synced.
+
+## Release prep — 2026-10-07 (evening)
+
+Three blockers from the pre-release review, done on branch `release-prep`:
+- **Links**: `open-mercato/context-scope` everywhere; landing footer links to GitHub and npm; fixes read "Suggested fix" with a hypothesis note (UI, README, landing).
+- **Rules precision** (two agents in parallel, file ownership per rule family): B-11, B-04, B-13, B-16, S-05 tightened; scope-aware fixes via `platformFix(run, variants, { scope })` + `childScopeFix`; `references.mjs` negation / template / placeholder / ignored-dir filters. Before → after on real repos (`scan --json`): context-viewer 141 → 122 findings (B-11 8 → 0, B-04 10 → 2, B-13 7 → 4); ai_techleaders_project 152 → 131 (B-11 13 → 0, B-04 3 → 1, B-13 9 → 3). First change unchanged in both. B-16 is still 20 on the second repo: those are resumed sessions, the finding is true, the volume is a follow-up.
+- **Token estimates**: `estimateByVendor` in `ir/estimate.mjs` is the single source; inventory rows carry `estTokensBy` + `estBasis`; budget, `check`, S-01 and `tokens` agree per vendor (test proves equality); binary reads get `kind: "binary"` with a 40 B/token ratio; calibration `cal-2026-10-07a`.
+- Verified: CLI 377 pass / 1 skipped, UI typecheck + build, site tests. The evaluation in `docs/evaluation-findings.md` should be re-run on the same five repositories before the first publish; the numbers there are pre-change.

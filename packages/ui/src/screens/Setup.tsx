@@ -35,6 +35,13 @@ const SKILL_SCOPE_ORDER: Record<string, number> = { project: 0, user: 1, plugin:
 
 export interface SetupScreenProps { file?: string }
 
+/** "claude-calibrated", "max of claude/codex", "neutral ratio": which bytes-per-token fit produced a figure. */
+function basisLabel(basis: string): string {
+  if (basis === "neutral") return "neutral ratio";
+  const max = /^max\((.+)\)$/.exec(basis);
+  return max ? `max of ${max[1].split(",").join("/")}` : `${basis}-calibrated`;
+}
+
 export function SetupScreen({ file }: SetupScreenProps) {
   const version = indexVersion.value;
   const rules = rulesVersion.value;
@@ -81,7 +88,7 @@ export function SetupScreen({ file }: SetupScreenProps) {
     ) },
     { key: "scope", label: "Scope", width: "6rem", sortValue: (f) => f.scope, render: (f) => <span class="scope-tag">{f.scope}</span> },
     { key: "vendors", label: "Vendors", width: "8rem", sortValue: (f) => f.vendors.join(","), render: (f) => f.vendors.map((v) => <span key={v} class={`vendor vendor-${v}`}>{v}</span>) },
-    { key: "tokens", label: "Est. tokens", numeric: true, align: "right", sortValue: (f) => f.estTokens, render: (f) => <span class="cell-peak"><span title={`${formatNumber(f.estTokens)} tokens · ${formatBytes(f.bytes)}`}>{formatNumber(f.estTokens)}</span><Badge provenance="estimated.local" /></span> },
+    { key: "tokens", label: "Est. tokens", title: "Per-vendor calibrated estimate; a file two vendors load shows the larger figure", numeric: true, align: "right", sortValue: (f) => f.estTokens, render: (f) => <span class="cell-peak"><span title={`${formatNumber(f.estTokens)} tokens · ${formatBytes(f.bytes)}${f.estBasis ? ` · ${basisLabel(f.estBasis)}` : ""}${f.estTokensBy ? ` · claude ${formatNumber(f.estTokensBy.claude)} · codex ${formatNumber(f.estTokensBy.codex)}` : ""}`}>{formatNumber(f.estTokens)}</span><Badge provenance="estimated.local" /></span> },
     { key: "precedence", label: "Precedence", numeric: true, align: "right", title: "Order in the vendor's load chain (1 loads first)", sortValue: (f) => f.precedence, render: (f) => f.precedence },
     { key: "loadState", label: "Load state", sortValue: (f) => f.loadState, render: (f) => <Badge label={LOAD_STATE[f.loadState].label} tone={LOAD_STATE[f.loadState].tone} title={LOAD_STATE[f.loadState].hint} /> },
     { key: "mtime", label: "Modified", sortValue: (f) => Date.parse(f.mtime), render: (f) => <time dateTime={f.mtime}>{formatDate(f.mtime)}</time> },
@@ -181,7 +188,7 @@ export function SetupScreen({ file }: SetupScreenProps) {
                     </div>
                   </div>
                   <div class="budget-total">
-                    <strong>{formatTokens(b.total.value)}</strong> <span class="muted">tok</span> <Badge provenance={b.total.provenance} />
+                    <strong>{formatTokens(b.total.value)}</strong> <span class="muted">tok</span> <Badge provenance={b.total.provenance} title={(b.total as { basis?: string }).basis ? `${basisLabel((b.total as { basis?: string }).basis as string)} estimate for ${vendor}` : undefined} />
                   </div>
                   <ul class="budget-values">
                     {BUDGET_SERIES.map((s) => <li key={s.key}><span class="legend-swatch" style={{ background: s.color }} aria-hidden="true" />{s.label} <strong>{formatTokens(b[s.key].value)}</strong> <Badge provenance={b[s.key].provenance} /></li>)}

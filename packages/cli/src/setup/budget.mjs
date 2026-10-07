@@ -5,16 +5,27 @@
  * observed `user_instructions` (observed.artifact), and a chain whose every
  * expected file was seen by the InstructionsLoaded hook (observed.artifact,
  * sizes from disk). One observed file does not make the whole chain observed.
+ *
+ * Every figure is the VENDOR's calibrated estimate of the same file
+ * (`estTokensBy[vendor]`, the number `contextscope tokens` prints in that
+ * vendor's column), so a Claude budget and a Codex budget of one AGENTS.md
+ * differ on purpose: their tokenizers do. `basis` on each entry says so.
  */
-import { estimateTokensFromBytes } from "../ir/estimate.mjs";
+import { basisFor, estimateTokensFromBytes, estTokensFor } from "../ir/estimate.mjs";
 import { chainFor, chainTokens } from "./precedence.mjs";
 
 /** Documented working assumptions; surfaced in the UI as estimates. */
 export const MCP_TOKENS_PER_TOOL = 150;
 export const MCP_DEFAULT_TOOLS_PER_SERVER = 10; // used when no session observed the server's tools
 
-function measured(value, provenance = "estimated.local") {
-  return { value: Math.round(value), provenance };
+function measured(value, provenance = "estimated.local", basis = undefined) {
+  return basis ? { value: Math.round(value), provenance, basis } : { value: Math.round(value), provenance };
+}
+
+/** A skill's or agent's description for one vendor; rows built before `estTokensBy` existed fall back to the chars. */
+function descriptionTokens(row, vendor) {
+  if (row.estTokensBy) return estTokensFor(row, vendor);
+  return estimateTokensFromBytes(row.descriptionChars, "prose", { vendor });
 }
 
 export function mcpToolCount(server) {
@@ -41,24 +52,26 @@ export function observedChainFor(instructionFiles, vendor) {
 export function buildStartupBudget({ vendorsDetected, instructionFiles, skills, agents, mcpServers, sessionStats }) {
   const budget = {};
   for (const vendor of vendorsDetected) {
-    let instructions = measured(chainTokens(instructionFiles, vendor));
+    const basis = basisFor([vendor]);
+    let instructions = measured(chainTokens(instructionFiles, vendor), "estimated.local", basis);
     const observedChain = observedChainFor(instructionFiles, vendor);
-    if (observedChain) instructions = measured(observedChain.reduce((sum, file) => sum + file.estTokens, 0), "observed.artifact");
+    if (observedChain) instructions = measured(observedChain.reduce((sum, file) => sum + estTokensFor(file, vendor), 0), "observed.artifact", basis);
     if (vendor === "codex" && Number.isFinite(sessionStats?.codexInstructionChars) && sessionStats.codexInstructionChars > 0) {
-      instructions = measured(estimateTokensFromBytes(sessionStats.codexInstructionChars, "prose"), "observed.artifact");
+      // The chain as Codex sent it (`user_instructions` chars): the Codex ratio over those chars.
+      instructions = measured(estimateTokensFromBytes(sessionStats.codexInstructionChars, "prose", { vendor: "codex" }), "observed.artifact", basis);
     }
     // Each vendor lists the skills it can see (Claude: .claude/skills, ~/.claude/skills, plugins; Codex: .agents/skills, ~/.agents/skills).
-    const skillTokens = skills.filter((s) => (s.vendors ?? ["claude"]).includes(vendor)).reduce((sum, s) => sum + estimateTokensFromBytes(s.descriptionChars, "prose"), 0);
-    const agentTokens = vendor === "claude" ? agents.reduce((sum, a) => sum + estimateTokensFromBytes(a.descriptionChars, "prose"), 0) : 0;
+    const skillTokens = skills.filter((s) => (s.vendors ?? ["claude"]).includes(vendor)).reduce((sum, s) => sum + descriptionTokens(s, vendor), 0);
+    const agentTokens = vendor === "claude" ? agents.reduce((sum, a) => sum + descriptionTokens(a, vendor), 0) : 0;
     const servers = mcpServers.filter(server => (server.vendor ?? "claude") === vendor);
     const mcpTokens = servers.reduce((sum, server) => sum + mcpToolCount(server) * MCP_TOKENS_PER_TOOL, 0);
     const entry = {
       instructions,
-      skills: measured(skillTokens),
-      agents: measured(agentTokens),
-      mcpTools: measured(mcpTokens),
+      skills: measured(skillTokens, "estimated.local", basis),
+      agents: measured(agentTokens, "estimated.local", basis),
+      mcpTools: measured(mcpTokens), // documented working assumption per tool, not a tokenizer figure
     };
-    entry.total = measured(instructions.value + skillTokens + agentTokens + mcpTokens);
+    entry.total = measured(instructions.value + skillTokens + agentTokens + mcpTokens, "estimated.local", basis);
     budget[vendor] = entry;
   }
   return budget;

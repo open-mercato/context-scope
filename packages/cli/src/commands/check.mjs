@@ -18,7 +18,7 @@ import { buildSetupInventory } from "../setup/inventory.mjs";
 import { isDirectory, exists } from "../setup/fs.mjs";
 import { rootInstructionFile } from "../setup/precedence.mjs";
 import { defaultThresholds, evaluateSetup, loadRules, severityOrder } from "../rules/index.mjs";
-import { formatCount, padLeft, padRight } from "../util/format.mjs";
+import { formatBasis, formatCount, padLeft, padRight } from "../util/format.mjs";
 
 export const name = "check";
 export const usage = "contextscope check [--repo <path>] [--config .contextscope.json] [--budget startup=6000] [--max-instruction-file 3000] [--no-broken-refs] [--fail-on high|medium|low] [--user-config] [--github] [--json]";
@@ -216,15 +216,19 @@ export async function runCheck({ repoRoot, home, config, userConfig = false }) {
     const value = entry.total?.value ?? 0;
     const limit = config.budgets.startupTokens;
     const root = rootInstructionFile(inventory.instructionFiles, vendor);
-    budget[vendor] = { startup: value, limit, ok: value <= limit, provenance: entry.instructions?.provenance, file: root?.path };
-    if (value > limit) violations.push({ kind: "budget", vendor, file: root?.path, value, limit, message: `${vendor} startup budget is ${formatCount(value)} tokens, over ${formatCount(limit)} by ${formatCount(value - limit)}` });
+    // Each vendor's line is that vendor's calibrated figure (the budget's `basis`), never a neutral ratio.
+    const basis = entry.total?.basis ?? entry.instructions?.basis ?? "neutral";
+    budget[vendor] = { startup: value, limit, ok: value <= limit, provenance: entry.instructions?.provenance, basis, file: root?.path };
+    if (value > limit) violations.push({ kind: "budget", vendor, file: root?.path, value, limit, basis, message: `${vendor} startup budget is ${formatCount(value)} tokens (${formatBasis(basis)}), over ${formatCount(limit)} by ${formatCount(value - limit)}` });
   }
   // Violations cover files that enter a prompt (the chain and path-scoped rules); nested files only
   // load when the model works under their directory, and ignored globs (fixtures, vendored trees) are skipped.
+  // A file's single figure is its vendor's estimate, or the larger of two vendors' (conservative); `basis` says which.
   for (const file of inventory.instructionFiles) {
     if (ignored(file.path) || (file.scope === "nested" && file.loadState === "discoverable")) continue;
     if (file.estTokens > config.budgets.instructionFileTokens) {
-      violations.push({ kind: "file", file: file.path, value: file.estTokens, limit: config.budgets.instructionFileTokens, message: `${file.path} is ${formatCount(file.estTokens)} est. tokens, over ${formatCount(config.budgets.instructionFileTokens)}` });
+      const basis = file.estBasis ?? "neutral";
+      violations.push({ kind: "file", file: file.path, value: file.estTokens, limit: config.budgets.instructionFileTokens, basis, message: `${file.path} is ${formatCount(file.estTokens)} est. tokens (${formatBasis(basis)}), over ${formatCount(config.budgets.instructionFileTokens)}` });
     }
     if (config.brokenRefs) {
       for (const ref of file.brokenRefs ?? []) violations.push({ kind: "broken-ref", file: file.path, ref, message: `${file.path} references ${ref}, which does not exist` });
@@ -255,10 +259,10 @@ export function renderCheck(result) {
   if (!vendorRows.length) lines.push("  no instruction files or agent configuration found for claude, codex or gemini");
   for (const [vendor, row] of vendorRows) {
     const over = row.ok ? "" : `over by ${formatCount(row.startup - row.limit)}`;
-    lines.push(`  ${padRight(vendor, 7)} startup ${padLeft(formatCount(row.startup), 7)} / ${formatCount(row.limit)} tokens   ${padRight(over, 18)} ${row.ok ? "ok" : "FAIL"}   (estimated from disk)`);
+    lines.push(`  ${padRight(vendor, 7)} startup ${padLeft(formatCount(row.startup), 7)} / ${formatCount(row.limit)} tokens   ${padRight(over, 18)} ${row.ok ? "ok" : "FAIL"}   (${formatBasis(row.basis)}, from disk)`);
   }
   for (const violation of result.violations) {
-    if (violation.kind === "file") lines.push(`  ${padRight(violation.file, 34)} ${formatCount(violation.value)} tokens > ${formatCount(violation.limit)}   FAIL`);
+    if (violation.kind === "file") lines.push(`  ${padRight(violation.file, 34)} ${formatCount(violation.value)} tokens > ${formatCount(violation.limit)}   FAIL   (${formatBasis(violation.basis)})`);
     if (violation.kind === "broken-ref") lines.push(`  ${padRight(`${violation.file} → ${violation.ref}`, 34)} missing reference   FAIL`);
   }
   const failOn = severityOrder[result.config.failOn];

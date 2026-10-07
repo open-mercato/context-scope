@@ -168,13 +168,53 @@ export function findingScopeFor(scope) {
 
 // --- fixes ---
 
-/** Picks the fix variant for the run's vendor; the finding carries exactly one platform. */
-export function platformFix(run, variants) {
+function pickVariant(run, variants) {
   const vendor = run.vendor;
   const chosen = variants[vendor] ?? variants.both;
   if (chosen) return { platform: variants[vendor] ? vendor : "both", ...chosen };
   const fallback = variants.claude ?? variants.codex ?? {};
   return { platform: "both", ...fallback };
+}
+
+/** A child scope: a Claude subagent scope, or any scope of a Codex child thread (its own run, `kind: "subagent-run"`). */
+export function isChildScope(run, scope) {
+  return scope?.kind === "subagent" || run?.kind === "subagent-run";
+}
+
+export const CHILD_RETURN_RULE = "Keep tool output out of the handoff; return paths and decisions only.";
+
+/**
+ * Default fix for a child scope. A subagent cannot /clear, open a session or delegate;
+ * what it does is written in its definition (`.claude/agents/<type>.md`, the Codex spawn
+ * prompt), so the fix goes there instead of telling the child to behave like a session.
+ */
+export function childScopeFix(run, scope) {
+  const type = scope?.agentType ?? run?.scopes?.[0]?.agentType;
+  if (run.vendor === "codex") {
+    return {
+      platform: "codex",
+      summary: `Fix the spawn prompt of ${type ? `the ${type} child thread` : "this child thread"}: keep tool output out of the handoff; return paths and decisions only.`,
+      snippet: `spawn_agent prompt: "<task>. ${CHILD_RETURN_RULE} Read files in ranges (sed -n 'A,Bp'); pipe shell output through head -c 8000."`,
+    };
+  }
+  // Built-in agent types (Explore, Plan, general-purpose) have no agent file; the Agent prompt is the definition then.
+  const where = type ? `.claude/agents/${type}.md (or the Agent prompt for a built-in type)` : "the agent definition (.claude/agents/<type>.md) or the Agent prompt";
+  return {
+    platform: "claude",
+    summary: `Fix ${where}: keep tool output out of the handoff; return paths and decisions only.`,
+    snippet: `- ${CHILD_RETURN_RULE}\n- Read files in ranges (Read offset/limit); cap search and shell output.`,
+  };
+}
+
+/**
+ * Picks the fix variant for the run's vendor; the finding carries exactly one platform.
+ * With `{ scope }`, a child scope (subagent, Codex child thread) gets `variants.subagent`
+ * (itself keyed by vendor) or, when absent, `childScopeFix`: a child must never be told
+ * to delegate, /clear, /new or start a fresh session.
+ */
+export function platformFix(run, variants, { scope } = {}) {
+  if (scope !== undefined && isChildScope(run, scope)) return variants.subagent ? pickVariant(run, variants.subagent) : childScopeFix(run, scope);
+  return pickVariant(run, variants);
 }
 
 // --- finding factory ---

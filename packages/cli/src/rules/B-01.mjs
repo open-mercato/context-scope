@@ -1,5 +1,8 @@
 import { aggregatedBlockEvidence, blockEvidence, blockSeverity, countedTitle, findingScopeFor, formatTokens, groupByScope, isToolResult, makeFinding, platformFix, resultKind, scopeRef, sum, toolName, toolTarget } from "./util.mjs";
 
+// Fixes a child can apply itself (read in slices, cap output); the "delegate to a subagent" fallback for other kinds cannot go to a subagent.
+const SELF_APPLICABLE_KINDS = new Set(["file", "search", "shell", "web"]);
+
 /** Fix for the fattest block of the scope; every snippet is pasteable as-is (placeholders only where the transcript has no value). */
 function fixFor(vendor, block) {
   const kind = resultKind(block);
@@ -35,6 +38,7 @@ export default {
       const evidence = aggregatedBlockEvidence(run, scope, blocks, (block) =>
         blockEvidence(run, block, { label: `${toolName(block)}${toolTarget(block) ? ` ${toolTarget(block)}` : ""} result ${formatTokens(block.estTokens)} at request #${block.firstRequest}` }));
       const fattest = blocks.reduce((best, b) => (b.estTokens > best.estTokens ? b : best), blocks[0]);
+      const variants = { claude: fixFor("claude", fattest), codex: fixFor("codex", fattest) };
       findings.push(makeFinding(this, run, {
         scope: findingScopeFor(scope),
         scopeId: scope.id,
@@ -44,7 +48,7 @@ export default {
         severity: blockSeverity(this, run, blocks, limit, thresholds),
         evidence,
         tokensAffected: sum(blocks.map((b) => b.estTokens)),
-        fix: platformFix(run, { claude: fixFor("claude", fattest), codex: fixFor("codex", fattest) }),
+        fix: platformFix(run, { ...variants, ...(SELF_APPLICABLE_KINDS.has(resultKind(fattest)) ? { subagent: variants } : {}) }, { scope }),
       }));
     }
     return findings;

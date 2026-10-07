@@ -24,12 +24,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pat-lewczuk/contextscope.git",
+    "url": "git+https://github.com/open-mercato/context-scope.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/pat-lewczuk/contextscope#readme",
+  "homepage": "https://github.com/open-mercato/context-scope#readme",
   "bugs": {
-    "url": "https://github.com/pat-lewczuk/contextscope/issues"
+    "url": "https://github.com/open-mercato/context-scope/issues"
   },
   "publishConfig": {
     "access": "public",

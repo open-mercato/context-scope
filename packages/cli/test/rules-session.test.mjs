@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { assertFindingShape, evaluateRun, loadRules, defaultThresholds } from "../src/rules/index.mjs";
 import { sha1 } from "../src/rules/util.mjs";
-import { makeScenario, scenarioNames } from "./fixtures/ir/make-runs.mjs";
+import { blk, callAndResult, makeRun, makeScenario, req, scenarioNames, scope, toolCall, toolResult } from "./fixtures/ir/make-runs.mjs";
 
 const thresholds = defaultThresholds();
 const rulesPromise = loadRules({ force: true, onWarning: () => {} });
@@ -177,9 +177,40 @@ test("B-04 reports subagent scope with scope evidence when the repeats happen in
   assert.equal(f.evidence[0].value, 3);
   assert.match(f.evidence[0].label, /×3/);
   assert.match(f.evidence[0].label, /requests #0, #0, #0/);
+  assert.match(f.evidence[0].label, /identical results/);
+  assert.match(f.fix.summary, /agent definition|spawn prompt/);
+  assert.doesNotMatch(f.fix.summary, /CLAUDE\.md|AGENTS\.md/);
   const main = await findingsFor("B-04-fires");
   assert.equal(only(main.findings, "B-04")[0].scope, "session");
-  assert.match(only(main.findings, "B-04")[0].fix.snippet, /Monitor/);
+  assert.match(only(main.findings, "B-04")[0].fix.snippet, /same arguments; note the result/);
+  assert.match(only(main.findings, "B-04")[0].fix.summary, /CLAUDE\.md/);
+});
+
+test("B-04 ignores repeats whose results differ (polling, re-checks) and tools that re-sample state by name", async () => {
+  const rules = await rulesPromise;
+  const differing = makeScenario("B-04-fires");
+  // Same command three times, three different outputs: a re-check, not a cache miss.
+  differing.scopes[0].blocks.filter((b) => b.category === "tool_result.shell").forEach((b, i) => { b.hash = sha1(`output-${i}`); });
+  assert.deepEqual(only(await evaluateRun(differing, { rules, thresholds }), "B-04"), []);
+
+  const polling = makeScenario("B-04-fires");
+  for (const b of polling.scopes[0].blocks) if (b.tool) b.tool.name = "mcp__chrome__screenshot";
+  assert.deepEqual(only(await evaluateRun(polling, { rules, thresholds }), "B-04"), []);
+
+  // Two identical results out of four do not reach the bar; three do, and only the identical ones count.
+  const mixed = makeScenario("B-04-fires");
+  mixed.scopes[0].blocks.push(...callAndResult("main", 70, 4, { name: "Bash", kind: "shell", args: "git status", resultTokens: 300 }));
+  const results = mixed.scopes[0].blocks.filter((b) => b.category === "tool_result.shell");
+  assert.equal(results.length, 4);
+  results[3].hash = sha1("changed");
+  const [f] = only(await evaluateRun(mixed, { rules, thresholds }), "B-04");
+  assert.equal(f.evidence[0].value, 3);
+  assert.equal(f.tokensAffected, 900);
+
+  // A call without a logged result cannot be judged.
+  const orphan = makeScenario("B-04-fires");
+  orphan.scopes[0].blocks = orphan.scopes[0].blocks.filter((b) => !b.category.startsWith("tool_result."));
+  assert.deepEqual(only(await evaluateRun(orphan, { rules, thresholds }), "B-04"), []);
 });
 
 test("B-04 aggregates identical-call groups per scope: count = groups, evidence = top 5 by resent tokens", async () => {
@@ -326,6 +357,47 @@ test("B-11 counts tiny follow-ups and sums what they resend", async () => {
   assert.equal(f.evidence[0].value, 11);
   assert.equal(f.tokensAffected, 11 * 120_000);
   assert.equal(f.severity, "low");
+  assert.match(f.evidence[2].label, /turn 2/);
+});
+
+/** A main scope with `turns` human prompts of `userTokens` each, every prompt followed by `loopSteps` tool-loop requests. */
+function agentLoopRun({ vendor = "claude", turns = 12, loopSteps = 4, userTokens = 20, toolResultTokens = 400 } = {}) {
+  const requests = [];
+  const blocks = [];
+  let index = 0;
+  let seq = 0;
+  for (let turn = 1; turn <= turns; turn += 1) {
+    requests.push(req(index, 120_000, { turn }));
+    blocks.push(blk("main", seq++, "user", userTokens, index));
+    index += 1;
+    for (let step = 0; step < loopSteps; step += 1) {
+      const toolUseId = `tu_${index}`;
+      blocks.push(toolCall("main", seq++, index - 1, { name: "Bash", kind: "shell", args: `cmd ${index}`, toolUseId }));
+      blocks.push(toolResult("main", seq++, index, { name: "Bash", kind: "shell", toolUseId, estTokens: toolResultTokens }));
+      requests.push(req(index, 120_000, { turn }));
+      index += 1;
+    }
+  }
+  return makeRun({ vendor, scopes: [scope("main", { requests, blocks })] });
+}
+
+test("B-11 counts only requests that start a human turn: tool-loop steps and deliveries without a user block never count", async () => {
+  const rules = await rulesPromise;
+  // 12 turns x (1 prompt + 4 loop steps) = 60 requests; 11 tiny turns (the first prompt is the task) is still a finding, 48 loop steps are not.
+  const loop = agentLoopRun();
+  const [f] = only(await evaluateRun(loop, { rules, thresholds }), "B-11");
+  assert.equal(f.evidence[0].value, 12);
+  assert.equal(f.tokensAffected, 12 * 120_000);
+  assert.ok(f.evidence.slice(2).every((e) => /turn \d+/.test(e.label)));
+
+  // Nine real prompts and 50 loop steps: below the bar once the loop steps are out.
+  const few = agentLoopRun({ turns: 9, loopSteps: 6 });
+  assert.deepEqual(only(await evaluateRun(few, { rules, thresholds }), "B-11"), []);
+
+  // A turn boundary whose new blocks are an attachment / tool result only (handoff delivery) is not a human message.
+  const delivered = makeScenario("B-11-fires");
+  for (const block of delivered.scopes[0].blocks) if (block.firstRequest > 0) block.category = "attachments";
+  assert.deepEqual(only(await evaluateRun(delivered, { rules, thresholds }), "B-11"), []);
 });
 
 test("B-12 uses the composition at peak", async () => {
@@ -359,6 +431,23 @@ test("B-13 fires on tokens or on hours+compactions with matching primary evidenc
   const [b] = only(hours.findings, "B-13");
   assert.notEqual(a.id.split(":")[1], b.id.split(":")[1]);
   assert.ok(hours.run.activeMs > 4 * 3_600_000);
+});
+
+test("B-13 is about length: the token branch needs an hour of active time, the hours branch needs two compactions", async () => {
+  const rules = await rulesPromise;
+  // 3.2M processed tokens in 38 active minutes: a busy short session, not a long one.
+  const requests = [];
+  for (let i = 0; i < 20; i += 1) requests.push(req(i, 160_000, { minute: i * 2 }));
+  const short = makeRun({ scopes: [scope("main", { requests, blocks: [blk("main", 0, "user", 300, 0)] })] });
+  assert.ok(short.summary.processedInputTokens > thresholds.sessionTooLongTokens);
+  assert.ok(short.activeMs < 3_600_000);
+  assert.deepEqual(only(await evaluateRun(short, { rules, thresholds }), "B-13"), []);
+
+  // Five active hours with one compaction: long, but the rule asks for two.
+  const long = makeScenario("B-13-hours-fires");
+  long.scopes[0].compactions = long.scopes[0].compactions.slice(0, 1);
+  long.summary.compactions = 1;
+  assert.deepEqual(only(await evaluateRun(long, { rules, thresholds }), "B-13"), []);
 });
 
 test("B-14 suggests files_with_matches on claude and rg -l on codex", async () => {
@@ -407,15 +496,20 @@ test("B-16 fires on unlogged share or base steps, explains resumed sessions vs h
 
   const steps = await findingsFor("B-16-steps-fires");
   const [g] = only(steps.findings, "B-16");
-  assert.equal(g.evidence.length, 3);
+  // The −12,000 step at #4 is hidden mass leaving the window, never an injection: not evidence, not tokens.
+  assert.equal(g.evidence.length, 2);
   assert.equal(g.evidence[1].kind, "request");
   assert.equal(g.evidence[1].ref, `${steps.run.id}#main#1`);
   assert.equal(g.evidence[1].value, 33_000);
   assert.match(g.evidence[1].label, /\+33,000 tok unlogged at request #1/);
-  assert.match(g.evidence[2].label, /−12,000 tok unlogged at request #4/);
-  assert.equal(g.tokensAffected, 45_000);
-  assert.match(g.fix.summary, /hidden injection/);
-  assert.match(g.fix.snippet, /claude mcp list/);
+  assert.ok(g.evidence.every((e) => !/−/.test(e.label)));
+  assert.equal(g.tokensAffected, 33_000);
+  assert.match(g.fix.summary, /grew at request #1/);
+  assert.match(g.fix.summary, /nested instruction file or memory/);
+  assert.match(g.fix.snippet, /contextscope hooks install --scope user/);
+  assert.doesNotMatch(g.fix.snippet, /mcp list/);
+  const codexSteps = await findingsFor("B-16-steps-fires", "codex");
+  assert.match(only(codexSteps.findings, "B-16")[0].fix.summary, /nested AGENTS\.md/);
 
   const child = await findingsFor("B-16-subagent-fires");
   const [h] = only(child.findings, "B-16");
@@ -423,7 +517,10 @@ test("B-16 fires on unlogged share or base steps, explains resumed sessions vs h
   assert.equal(h.scopeId, "a1");
   assert.match(h.evidence[1].label, /present from the first request/);
   assert.ok(h.evidence.some((e) => e.kind === "scope" && e.ref === `${child.run.id}#a1`));
-  assert.match(h.fix.snippet, /\/clear/);
+  // A subagent cannot /clear or resume: its fix goes to the agent definition.
+  assert.doesNotMatch(h.fix.snippet, /\/clear/);
+  assert.match(h.fix.summary, /\.claude\/agents/);
+  assert.match(h.fix.summary, /return paths and decisions only/);
 
   // B-10 ignores unlogged mass: only system + instructions count toward the system share
   const rules = await rulesPromise;
@@ -433,6 +530,56 @@ test("B-16 fires on unlogged share or base steps, explains resumed sessions vs h
   assert.deepEqual(only(await evaluateRun(run, { rules, thresholds }), "B-10"), []);
   first.composition.system = 60_000;
   assert.equal(only(await evaluateRun(run, { rules, thresholds }), "B-10")[0].evidence[0].value, 72_000);
+});
+
+test("B-16 raises the bar: a drop-only step list or a small positive step below the share threshold stays quiet", async () => {
+  const rules = await rulesPromise;
+  const drops = makeScenario("B-16-steps-fires");
+  drops.scopes[0].baseSteps = [{ atRequest: 2, delta: -30_000 }, { atRequest: 4, delta: -12_000 }];
+  assert.deepEqual(only(await evaluateRun(drops, { rules, thresholds }), "B-16"), []);
+  const small = makeScenario("B-16-steps-fires");
+  small.scopes[0].baseSteps = [{ atRequest: 2, delta: 4_000 }];
+  assert.deepEqual(only(await evaluateRun(small, { rules, thresholds }), "B-16"), []);
+  small.scopes[0].baseSteps = [{ atRequest: 2, delta: 5_000 }];
+  const [f] = only(await evaluateRun(small, { rules, thresholds }), "B-16");
+  assert.equal(f.tokensAffected, 5_000);
+  assert.match(f.fix.summary, /grew at request #2/);
+});
+
+test("scope-aware fixes: a Codex child thread or a Claude subagent is never told to /clear, /new, start a session or delegate", async () => {
+  const rules = await rulesPromise;
+  const forbidden = /\/clear|\/new|fresh (session|thread|window)|new thread|delegate/i;
+  // Codex child thread: its own run with kind "subagent-run"; session-level rules must address the spawn prompt.
+  for (const name of ["B-13-fires", "B-11-fires", "B-07-fires", "B-12-fires"]) {
+    const run = makeScenario(name, { vendor: "codex" });
+    run.kind = "subagent-run";
+    run.parentThreadId = "parent-1";
+    run.scopes[0].agentType = "reviewer";
+    const id = name.slice(0, 4);
+    const [f] = only(await evaluateRun(run, { rules, thresholds }), id);
+    assert.ok(f, `${id} fires on the child run`);
+    assert.equal(f.fix.platform, "codex");
+    assert.doesNotMatch(`${f.fix.summary}\n${f.fix.snippet}`, forbidden, `${id} child fix: ${f.fix.summary}`);
+    assert.match(f.fix.summary, /reviewer|spawn prompt/);
+    assert.match(f.fix.snippet, /spawn_agent prompt/);
+  }
+  // The same scenarios as main runs keep the session fix.
+  const main = only(await evaluateRun(makeScenario("B-13-fires", { vendor: "codex" }), { rules, thresholds }), "B-13")[0];
+  assert.match(main.fix.snippet, /\/new/);
+
+  // Claude subagent scope with a fat "other" result: the delegate fallback becomes an agent-definition fix; file reads keep the ranged read.
+  const child = makeScenario("B-01-subagent-many");
+  const [fileFix] = only(await evaluateRun(child, { rules, thresholds }), "B-01");
+  assert.equal(fileFix.scope, "subagent");
+  assert.doesNotMatch(fileFix.fix.summary, forbidden);
+  for (const block of child.scopes[1].blocks) if (block.category.startsWith("tool_result.")) { block.category = "tool_result.other"; block.tool.kind = "other"; block.tool.name = "mcp__db__query"; }
+  const [otherFix] = only(await evaluateRun(child, { rules, thresholds }), "B-01");
+  assert.doesNotMatch(`${otherFix.fix.summary}\n${otherFix.fix.snippet}`, forbidden);
+  assert.match(otherFix.fix.summary, /\.claude\/agents/);
+  assert.match(otherFix.fix.snippet, /Keep tool output out of the handoff/);
+  const mainOther = makeScenario("B-01-fires");
+  for (const block of mainOther.scopes[0].blocks) if (block.category.startsWith("tool_result.")) { block.category = "tool_result.other"; block.tool.kind = "other"; block.tool.name = "mcp__db__query"; }
+  assert.match(only(await evaluateRun(mainOther, { rules, thresholds }), "B-01")[0].fix.summary, /Delegate/);
 });
 
 test("every scenario builds a finished run whose findings all pass the shape check and are sorted", async () => {

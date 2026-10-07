@@ -11,6 +11,7 @@ import { parseTomlMcpServers, hookRunStats } from "../src/setup/config.mjs";
 import { duplicateBlocks } from "../src/setup/instructions.mjs";
 import { projectKeyCandidates } from "../src/setup/extensions.mjs";
 import { chainFor } from "../src/setup/precedence.mjs";
+import { estimateTokensFromBytes } from "../src/ir/estimate.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const REPOS = path.join(here, "fixtures", "repos");
@@ -50,7 +51,17 @@ test("messy fixture: instruction files carry precedence, load state, imports and
     assert.ok(!path.isAbsolute(file.path), `path must be relative: ${file.path}`);
     assert.ok(file.estTokens > 0 && file.bytes > 0);
     assert.match(file.mtime, /^\d{4}-\d{2}-\d{2}T/);
+    // One estimate per file, per vendor; the single number is the file's own vendor's figure (max over two vendors).
+    assert.ok(file.estTokensBy.claude > 0 && file.estTokensBy.codex > 0 && file.estTokensBy.neutral > 0, `${file.path} carries estTokensBy`);
+    assert.ok(["prose", "code"].includes(file.estKind));
+    const calibrated = [...new Set(file.vendors)].filter((v) => v === "claude" || v === "codex").sort();
+    const expectedBasis = calibrated.length === 0 ? "neutral" : calibrated.length === 1 ? calibrated[0] : `max(${calibrated.join(",")})`;
+    assert.equal(file.estBasis, expectedBasis, file.path);
+    assert.equal(file.estTokens, expectedBasis === "neutral" ? file.estTokensBy.neutral : Math.max(...calibrated.map((v) => file.estTokensBy[v])), file.path);
   }
+  assert.equal(byPath["CLAUDE.md"].estBasis, "claude");
+  assert.equal(byPath["AGENTS.md"].estBasis, "codex");
+  assert.ok(byPath["CLAUDE.md"].estTokensBy.claude > byPath["CLAUDE.md"].estTokensBy.neutral, "the Claude figure is above the neutral ratio, as calibrated");
   // Claude chain = user + project + local + rules (nested is lazy)
   assert.deepEqual(chainFor(inv.instructionFiles, "claude").map(f => f.path), ["~/.claude/CLAUDE.md", "CLAUDE.md", "CLAUDE.local.md", ".claude/rules/general.md"]);
   // Duplicate block between CLAUDE.md and the rules file
@@ -97,14 +108,25 @@ test("messy fixture: skills, agents, hooks, MCP, settings, budget", async () => 
   assert.deepEqual(inv.settings.find(s => s.path === "~/.claude/settings.json").keys, ["hooks", "mcpServers"]);
   assert.equal(inv.memory.present, false);
   assert.equal(inv.startupBudget.codex.instructions.provenance, "observed.artifact");
-  assert.equal(inv.startupBudget.codex.instructions.value, Math.ceil(4000 / 3.6));
+  assert.equal(inv.startupBudget.codex.instructions.value, estimateTokensFromBytes(4000, "prose", { vendor: "codex" }), "observed Codex chars go through the Codex calibration");
+  assert.equal(inv.startupBudget.codex.instructions.basis, "codex");
   // Only CLAUDE.md is observed.loaded (instructionFilesObserved) while the rest of the expected chain is not:
   // one observed file does not make the chain observed, so the budget stays an estimate over the expected chain.
   assert.equal(inv.instructionFiles.find(f => f.path === "CLAUDE.md").loadState, "observed.loaded");
   assert.equal(inv.startupBudget.claude.instructions.provenance, "estimated.local");
-  assert.equal(inv.startupBudget.claude.instructions.value, inv.instructionFiles.filter(f => f.vendors.includes("claude") && ["expected.load", "observed.loaded"].includes(f.loadState)).reduce((sum, f) => sum + f.estTokens, 0));
+  // Each vendor's budget line is that vendor's calibrated figure of the same files (estTokensBy[vendor]).
+  assert.equal(inv.startupBudget.claude.instructions.value, inv.instructionFiles.filter(f => f.vendors.includes("claude") && ["expected.load", "observed.loaded"].includes(f.loadState)).reduce((sum, f) => sum + f.estTokensBy.claude, 0));
   const claude = inv.startupBudget.claude;
+  assert.equal(claude.instructions.basis, "claude");
+  assert.equal(claude.total.basis, "claude");
+  assert.equal(claude.mcpTools.basis, undefined, "the MCP per-tool constant is not a tokenizer figure");
   assert.equal(claude.total.value, claude.instructions.value + claude.skills.value + claude.agents.value + claude.mcpTools.value);
+  assert.equal(claude.skills.value, inv.skills.filter((skill) => skill.vendors.includes("claude")).reduce((sum, skill) => sum + skill.estTokensBy.claude, 0), "skills count their description, Claude-calibrated");
+  assert.equal(claude.agents.value, inv.agents.reduce((sum, agent) => sum + agent.estTokensBy.claude, 0));
+  for (const agent of inv.agents) assert.equal(agent.estBasis, "claude");
+  const fine = skills[".claude/skills/fine/SKILL.md"];
+  assert.equal(fine.estBasis, "claude");
+  assert.ok(fine.bodyEstTokens > 0 && fine.bodyEstTokensBy.claude === fine.bodyEstTokens, "the body keeps its single number, now on the skill's vendor basis");
   assert.ok(claude.mcpTools.value >= 20 * 150);
 });
 
@@ -180,7 +202,9 @@ test("toml MCP sections, hook run matching and duplicate block detection", () =>
   assert.equal(servers[1].enabled, false);
   const stats = hookRunStats({ event: "PostToolUse", matcher: "Write", command: "npm test" }, { "PostToolUse:Write": { runs: 2, stdoutSizes: [3600, 36] }, other: { runs: 5, stdoutSizes: [1] } });
   assert.equal(stats.runs, 2);
-  assert.deepEqual(stats.stdoutTokens, [1000, 10]);
+  // Legacy byte sizes go through the Claude calibration (hooks are a Claude Code feature), not the neutral ratio.
+  assert.deepEqual(stats.stdoutTokens, [estimateTokensFromBytes(3600, "prose", { vendor: "claude" }), estimateTokensFromBytes(36, "prose", { vendor: "claude" })]);
+  assert.ok(stats.stdoutTokens[0] > 1000);
   const lines = ["l1", "l2", "l3", "l4", "l5", "l6"];
   const blocks = duplicateBlocks({ path: "a", lines: ["x", ...lines, "y"] }, { path: "b", lines: ["z", ...lines] });
   assert.equal(blocks.length, 1);
