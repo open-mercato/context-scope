@@ -280,7 +280,9 @@ test("consent gate: the consent page needs the launch token and the API answers 
     assert.equal((await fetch(`${ctx.base}/`)).status, 401, "no consent page without the token");
     const page = await (await fetch(ctx.url)).text();
     assert.match(page, /Authorize read-only scan/);
-    assert.match(page, /location\.replace\('\/\?token='/);
+    assert.match(page, /history\.replaceState\(null,'','\/\?token='/);
+    assert.match(page, /location\.reload\(\)/, "a hash-only change would not leave the consent page");
+    assert.doesNotMatch(page, /location\.(replace|assign)\(/);
     assert.equal((await ctx.get("/api/v1/overview")).status, 409);
     assert.equal(ctx.app.index.lastResult, null, "nothing indexed before consent");
     assert.equal((await fetch(`${ctx.base}/api/authorize`, { method: "POST" })).status, 401);

@@ -1,7 +1,9 @@
 /**
  * First-run consent page. Server-rendered so a stale UI bundle can never skip
- * it. After the user authorizes, the page navigates to the SPA at
- * `/?token=<token>#/`.
+ * it. After the user authorizes, the page reloads into the SPA at
+ * `/?token=<token>#/`. A reload, not `location.replace()`: the target differs
+ * from the consent URL only by its hash, which the browser would treat as an
+ * in-page jump and never fetch the SPA.
  */
 export function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({
@@ -40,7 +42,7 @@ const button=document.querySelector('#authorize');
 button.addEventListener('click',async()=>{button.disabled=true;button.textContent='Starting the index…';
 const token=new URLSearchParams(location.search).get('token')||'';
 try{const response=await fetch('/api/authorize',{method:'POST',headers:{authorization:'Bearer '+token}});
-if(response.ok){location.replace('/?token='+encodeURIComponent(token)+'#/');return;}}catch{}
+if(response.ok){history.replaceState(null,'','/?token='+encodeURIComponent(token)+'#/');location.reload();return;}}catch{}
 button.disabled=false;button.textContent='Try again';});
 </script></body></html>`;
 }
