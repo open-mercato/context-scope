@@ -1,0 +1,182 @@
+{
+  "plain": {
+    "records": 44,
+    "requests": 8,
+    "distinctMessageIds": 8,
+    "processedInputTokens": 227700,
+    "outputTokens": 1434,
+    "peak": 31200,
+    "turns": 2,
+    "synthetic": 1,
+    "toolCalls": 7,
+    "compactions": [],
+    "skillBytes": 1500,
+    "handoffBytes": {}
+  },
+  "compaction": {
+    "records": 51,
+    "requests": 10,
+    "distinctMessageIds": 10,
+    "processedInputTokens": 359000,
+    "outputTokens": 2899,
+    "peak": 45800,
+    "turns": 2,
+    "synthetic": 0,
+    "toolCalls": 8,
+    "compactions": [
+      {
+        "atRequest": 7,
+        "trigger": "auto",
+        "preTokens": 180000,
+        "postTokens": 9000,
+        "cumulativeDroppedTokens": 171000,
+        "durationMs": 12345,
+        "preserved": 2,
+        "tools": [
+          "mcp__lorem-server__lorem_tool",
+          "mcp__lorem-server__other_tool"
+        ]
+      }
+    ],
+    "summaryBytes": 2886,
+    "handoffBytes": {}
+  },
+  "subagents": {
+    "records": 45,
+    "requests": 11,
+    "distinctMessageIds": 11,
+    "processedInputTokens": 308850,
+    "outputTokens": 2515,
+    "peak": 30650,
+    "turns": 1,
+    "synthetic": 0,
+    "toolCalls": 10,
+    "compactions": [],
+    "handoffBytes": {
+      "a0000000000000002": 2000,
+      "a0000000000000001": 3119,
+      "a0000000000000004": 2369,
+      "a0000000000000005": 2739
+    },
+    "embeddedRemainderBytes": 306,
+    "embeddedMonitorBytes": 239,
+    "launchMessageId": "msg_03_0003",
+    "subagents": {
+      "a0000000000000001": {
+        "records": 14,
+        "requests": 4,
+        "distinctMessageIds": 4,
+        "processedInputTokens": 104600,
+        "outputTokens": 1185,
+        "peak": 27200,
+        "turns": 1,
+        "synthetic": 0,
+        "toolCalls": 3,
+        "compactions": [],
+        "handoffBytes": {
+          "a0000000000000003": 900
+        },
+        "launchedAtRequest": 2,
+        "deliveredAtRequest": 7,
+        "parent": "main",
+        "depth": 1
+      },
+      "a0000000000000002": {
+        "records": 19,
+        "requests": 5,
+        "distinctMessageIds": 5,
+        "processedInputTokens": 147600,
+        "outputTokens": 1553,
+        "peak": 33600,
+        "turns": 1,
+        "synthetic": 0,
+        "toolCalls": 4,
+        "compactions": [],
+        "handoffBytes": {},
+        "launchedAtRequest": 3,
+        "deliveredAtRequest": 4,
+        "parent": "main",
+        "depth": 1
+      },
+      "a0000000000000003": {
+        "records": 10,
+        "requests": 3,
+        "distinctMessageIds": 3,
+        "processedInputTokens": 77200,
+        "outputTokens": 735,
+        "peak": 26700,
+        "turns": 1,
+        "synthetic": 0,
+        "toolCalls": 2,
+        "compactions": [],
+        "handoffBytes": {},
+        "launchedAtRequest": 2,
+        "deliveredAtRequest": 3,
+        "parent": "a0000000000000001",
+        "depth": 2
+      },
+      "a0000000000000004": {
+        "records": 10,
+        "requests": 3,
+        "distinctMessageIds": 3,
+        "processedInputTokens": 77200,
+        "outputTokens": 698,
+        "peak": 26700,
+        "turns": 1,
+        "synthetic": 0,
+        "toolCalls": 2,
+        "compactions": [],
+        "handoffBytes": {},
+        "launchedAtRequest": 8,
+        "deliveredAtRequest": 9,
+        "parent": "main",
+        "depth": 1,
+        "via": "attachment"
+      },
+      "a0000000000000005": {
+        "records": 10,
+        "requests": 3,
+        "distinctMessageIds": 3,
+        "processedInputTokens": 77200,
+        "outputTokens": 695,
+        "peak": 26700,
+        "turns": 1,
+        "synthetic": 0,
+        "toolCalls": 2,
+        "compactions": [],
+        "handoffBytes": {},
+        "launchedAtRequest": 8,
+        "deliveredAtRequest": 10,
+        "parent": "main",
+        "depth": 1,
+        "via": "tool_result"
+      }
+    }
+  },
+  "harness": {
+    "records": 8,
+    "requests": 1,
+    "distinctMessageIds": 1,
+    "processedInputTokens": 23000,
+    "outputTokens": 439,
+    "peak": 23000,
+    "turns": 1,
+    "synthetic": 0,
+    "toolCalls": 0,
+    "compactions": [],
+    "handoffBytes": {}
+  },
+  "tempCopy": {
+    "records": 29,
+    "requests": 7,
+    "distinctMessageIds": 7,
+    "processedInputTokens": 163800,
+    "outputTokens": 1259,
+    "peak": 25300,
+    "turns": 1,
+    "synthetic": 0,
+    "toolCalls": 6,
+    "compactions": [],
+    "handoffBytes": {}
+  }
+}

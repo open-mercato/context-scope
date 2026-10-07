@@ -1,0 +1,15 @@
+{
+  "instructionFileTokens": 3000,
+  "instructionChainTokens": 6000,
+  "duplicateBlockMinLines": 5,
+  "skillDescriptionMinChars": 20,
+  "skillDescriptionMaxChars": 1024,
+  "rulesScopingMinTokens": 1500,
+  "staleInstructionDays": 180,
+  "staleInstructionCommits": 50,
+  "mcpToolsPerServer": 15,
+  "mcpToolsTotal": 40,
+  "memoryMinSessions": 5,
+  "hookStdoutTokens": 1500,
+  "hookStdoutShare": 0.2
+}

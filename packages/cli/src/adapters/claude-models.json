@@ -1,0 +1,15 @@
+{
+  "$comment": "Claude Code context windows by model-id prefix (ADR-001 section 5.5, ADR-002 H.2). Longest matching prefix wins; ids containing [1m] are 1,000,000; anything else is `default`. All values are estimated.local: evidence in a session (compaction preTokens, peak usage across every scope) raises the value to the smallest documented window >= the evidence from {200k, 1M} (derived.exact, lowerBound = evidence); above 1M the evidence itself is kept and labelled unknown, never a guessed 2M. Evidence column: max observed ctx / compaction preTokens over the local corpus described in docs/format-claude-code.md (opus-5 and opus-4-8 compaction preTokens of ~1.00M prove the 1M window).",
+  "default": 200000,
+  "windows": [
+    { "prefix": "claude-opus-5", "window": 1000000, "evidence": "auto-compaction preTokens 940,027-1,001,760 (7 events)" },
+    { "prefix": "claude-sonnet-5", "window": 1000000, "evidence": "auto-compaction preTokens 967,050 and 967,423" },
+    { "prefix": "claude-fable-5", "window": 1000000, "evidence": "compaction preTokens 898,550; peak ctx 896,665" },
+    { "prefix": "claude-fable-5-1", "window": 1000000, "evidence": "not calibrated: peak ctx 188,834 without compaction; inherits the fable-5 family value" },
+    { "prefix": "claude-opus-4-8", "window": 1000000, "evidence": "compaction preTokens 1,000,228 and 979,588" },
+    { "prefix": "claude-haiku-4-5", "window": 200000, "evidence": "not calibrated: peak ctx 24,515; documented 200k window" },
+    { "prefix": "claude-opus-4", "window": 200000, "evidence": "documented 200k window" },
+    { "prefix": "claude-sonnet-4", "window": 200000, "evidence": "documented 200k window" },
+    { "prefix": "claude-3", "window": 200000, "evidence": "documented 200k window" }
+  ]
+}

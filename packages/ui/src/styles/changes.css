@@ -1,0 +1,41 @@
+/* Before/after per instruction-file edit (ADR-005 §1): the ChangePanel on Setup and the Findings card. No colour on deltas. */
+
+.change-panel { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 14px; border-top: 1px solid var(--border); background: var(--surface); }
+.change-compact { padding: 0; border-top: 0; background: transparent; }
+.change-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; font-size: 13px; color: var(--muted); }
+.change-head code { color: var(--text); }
+.change-head time { color: var(--text); }
+.change-n { color: var(--text); font-variant-numeric: tabular-nums; }
+.change-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.change-table th, .change-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: baseline; white-space: nowrap; }
+.change-table thead th { color: var(--muted); font-weight: 500; font-size: 12px; }
+.change-table tbody th { font-weight: 500; color: var(--text); }
+.change-table tbody th .badge { margin-left: 6px; }
+.change-table .num { text-align: right; }
+.change-table tbody tr:last-child th, .change-table tbody tr:last-child td { border-bottom: 0; }
+.change-delta-strong { font-weight: 700; }
+.change-rules tbody th { font-weight: 400; }
+.change-rules code { color: var(--muted); margin-right: 4px; }
+.change-caveats { margin: 0; font-size: 12px; }
+.change-note { margin: 0; font-size: 13px; }
+.change-toggle { border: 1px solid var(--border-strong); background: transparent; color: var(--text); border-radius: var(--radius-sm); padding: 2px 8px; font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.change-toggle:hover { background: var(--surface-2); }
+.change-toggle[aria-expanded="true"] { background: var(--surface-3); }
+.change-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.change-empty { padding: 10px 16px; border-top: 1px solid var(--border); }
+.change-card { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); margin-bottom: 16px; }
+.change-card-title { margin: 0; font-size: 15px; font-weight: 600; }
+.change-card-title .muted { font-weight: 400; font-size: 13px; }
+.change-card-line { margin: 0; font-size: 13px; }
+
+/* Finding card: where the rule's rationale comes from (src/rules/sources.json). */
+.finding-sources { margin: 4px 0 8px; font-size: 12.5px; color: var(--muted); }
+.finding-sources summary { cursor: pointer; list-style-position: inside; }
+.finding-sources summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.finding-sources-note, .finding-sources-caveat { margin: 6px 0 0; }
+.finding-sources-list { margin: 6px 0 0; padding-left: 18px; }
+.finding-sources-list li { margin: 2px 0; }
+.basis { font-weight: 600; }
+.basis-sourced { color: var(--good, var(--text)); }
+.basis-inferred { color: var(--text); }
+.basis-opinion { color: var(--warn, var(--text)); }

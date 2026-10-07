@@ -1,0 +1,49 @@
+{
+  "name": "contextscope",
+  "version": "0.11.0",
+  "description": "Local context-window profiler for Claude Code and Codex sessions: where the context went, what subagents cost and returned, which setup change to make first. Nothing leaves the machine.",
+  "type": "module",
+  "bin": {
+    "contextscope": "./src/contextscope.mjs"
+  },
+  "main": "./src/contextscope.mjs",
+  "files": [
+    "src",
+    "ui",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "node src/contextscope.mjs check --repo ../.. --fail-on high",
+    "prepack": "node scripts/prepack.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pat-lewczuk/contextscope.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/pat-lewczuk/contextscope#readme",
+  "bugs": {
+    "url": "https://github.com/pat-lewczuk/contextscope/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "keywords": [
+    "context-engineering",
+    "context-window",
+    "claude-code",
+    "codex",
+    "gemini-cli",
+    "profiler",
+    "agents"
+  ],
+  "author": "Patryk Lewczuk",
+  "license": "MIT"
+}

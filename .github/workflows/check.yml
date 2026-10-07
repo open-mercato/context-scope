@@ -1,0 +1,51 @@
+# CI for the ContextScope monorepo: CLI tests, UI build, and the product's own
+# setup gate run against this repository (we are the first consumer of `check`).
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  cli:
+    name: CLI tests (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Build the UI bundle (packages/cli/ui)
+        working-directory: packages/ui
+        run: npm ci && npm run build
+      - name: CLI tests
+        working-directory: packages/cli
+        run: node --test test/*.test.mjs
+      - name: Pack dry run (no fixtures or tests ship)
+        working-directory: packages/cli
+        run: |
+          npm pack --dry-run --json > /tmp/pack.json
+          node -e '
+            const [pkg] = JSON.parse(require("fs").readFileSync("/tmp/pack.json", "utf8"));
+            const bad = pkg.files.map((f) => f.path).filter((p) => /^test\/|^scripts\/(?!prepack)|fixtures|\.test\.mjs$/.test(p));
+            if (bad.length) { console.error("tarball carries dev files:", bad); process.exit(1); }
+            console.log(`${pkg.entryCount} files, ${(pkg.unpackedSize / 1024).toFixed(0)} KB unpacked`);
+          '
+
+  dogfood:
+    name: contextscope check --repo . --fail-on high
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Setup gate over this repository (setup only; no sessions, no index, no home config)
+        run: node packages/cli/src/contextscope.mjs check --repo . --fail-on high --github
